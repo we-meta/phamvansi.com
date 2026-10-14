@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Paper Lab</title>
+<style>
+  @font-face { font-family: "JBM"; font-weight: 300; src: url(fonts/jetbrains-mono-latin-300-normal.woff2) format("woff2"); }
+  @font-face { font-family: "JBM"; font-weight: 400; src: url(fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "JBM"; font-weight: 600; src: url(fonts/jetbrains-mono-latin-600-normal.woff2) format("woff2"); }
+  html, body { margin: 0; background: #060708; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script>
+"use strict";
+// Every visual is a pure function of time t (seconds). Randomness comes from a
+// seeded generator at init, or from hash() of stable indices per frame.
+const W = 1080, H = 1350, FPS = 30, DUR = 22;
+const cv = document.getElementById("c");
+const ctx = cv.getContext("2d");
+
+// ---------- utilities ----------
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = mulberry32(20261014);
+const rnd = (a = 0, b = 1) => a + (b - a) * R();
+const rint = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = arr => arr[Math.floor(R() * arr.length)];
+const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const hash2 = (a, b) => hash(a * 57.31 + b * 113.7);
+function noise1(x) { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hash(i) * (1 - u) + hash(i + 1) * u; }
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ss = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const easeOut = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeIO = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const TAU = Math.PI * 2;
+const FONT = '"JBM", "DejaVu Sans Mono", monospace';
+const fnt = (px, w = 400) => `${w} ${px}px ${FONT}`;
+const ink = a => `rgba(228,231,234,${clamp(a, 0, 1).toFixed(3)})`;
+const dim = a => `rgba(150,156,163,${clamp(a, 0, 1).toFixed(3)})`;
+const BG = "#060708";
+const pad = (n, k, c = "0") => String(n).padStart(k, c);
+const fmtInt = n => Math.round(n).toLocaleString("en-US");
+
+function txt(g, s, x, y, size, a = 1, align = "left", w = 400, color = null) {
+  g.font = fnt(size, w);
+  g.textAlign = align;
+  g.fillStyle = color || ink(a);
+  g.fillText(s, x, y);
+}
+function corners(g, x, y, w, h, l, a) {
+  g.strokeStyle = ink(a); g.lineWidth = 1; g.beginPath();
+  g.moveTo(x, y + l); g.lineTo(x, y); g.lineTo(x + l, y);
+  g.moveTo(x + w - l, y); g.lineTo(x + w, y); g.lineTo(x + w, y + l);
+  g.moveTo(x + w, y + h - l); g.lineTo(x + w, y + h); g.lineTo(x + w - l, y + h);
+  g.moveTo(x + l, y + h); g.lineTo(x, y + h); g.lineTo(x, y + h - l);
+  g.stroke();
+}
+
+// ---------- timeline ----------
+const STAGES = [["READ", 0.6, 5.4], ["EXTRACT", 5.4, 9.6], ["BUILD", 9.6, 14.2], ["VALIDATE", 14.2, 18.6], ["PACKAGE", 18.6, 21.0]];
+const stageP = (i, t) => clamp((t - STAGES[i][1]) / (STAGES[i][2] - STAGES[i][1]));
+function stageAt(t) { for (let i = STAGES.length - 1; i >= 0; i--) if (t >= STAGES[i][1]) return i; return 0; }
+const REVIEW_AT = [0.2, 0.46, 0.7, 0.88]; // validate progress where review flags appear
+
+// Camera: slow continuous dolly + drift, no cuts.
+function camera(t) {
+  const u = t / DUR;
+  return {
+    s: 1.075 - 0.065 * easeIO(u) + 0.006 * Math.sin(t * 0.55),
+    x: 16 * Math.sin(t * 0.19 + 0.4) - 8 * u,
+    y: 10 * Math.sin(t * 0.23 + 1.3) + 14 * (u - 0.5),
+    r: 0.014 * Math.sin(t * 0.13 + 0.6) - 0.006 * u,
+  };
+}
+function applyCam(g, cam, k, ox = W / 2, oy = H / 2) {
+  g.translate(ox, oy);
+  g.scale(1 + (cam.s - 1) * k, 1 + (cam.s - 1) * k);
+  g.rotate(cam.r * k);
+  g.translate(-ox + cam.x * k, -oy + cam.y * k);
+}
+
+// ---------- content ----------
+const CX = 540, CY = 632;
+const R_FLOW = 188, R_RING_IN = 198, R_RING_OUT = 292;
+const LEX = ["flow", "pressure", "vorticity", "advection", "solver", "mesh", "particle", "kernel", "stable", "implicit", "explicit", "boundary", "density", "velocity", "projection", "divergence", "lattice", "spectral", "upwind", "flux", "scheme", "energy", "momentum", "viscous", "grid", "time", "step", "error", "order", "convergence", "we", "the", "of", "and", "is", "in", "a", "to", "with", "for", "by", "we propose", "results", "method", "Eq.", "Fig.", "Table", "δt", "Re", "h", "ρ", "ν", "u", "∇p"];
+const METHODS = ["SEMI-LAGR. ADVECT", "MAC PROJECTION", "FLIP / PIC", "WCSPH", "LATTICE BOLTZMANN", "MPM (APIC)", "VORTEX PARTICLE", "LEVEL-SET", "SHALLOW-WATER FV", "PBD FLUIDS", "SPECTRAL NS"];
+const TOPICS = ["semi-lagrangian", "mac-proj", "flip-pic", "wcsph", "lbm-bgk", "mpm-apic", "vortex-p", "level-set", "sw-fv", "pbd-fluid", "spectral", "multigrid", "cfl-adapt", "turb-les", "surf-tension", "ghost-fluid", "weno5", "cut-cell", "mass-cons", "iisph"];
+const PAPERS = [];
+for (let i = 0; i < 64; i++) {
+  PAPERS.push({
+    id: `${pad(rint(15, 25), 2)}${pad(rint(1, 12), 2)}.${pad(rint(1000, 19999), 5)}`,
+    topic: TOPICS[(i * 7 + rint(0, 3)) % TOPICS.length],
+    pages: rint(9, 48),
+  });
+}
+const PAGES_TOTAL = PAPERS.reduce((s, p) => s + p.pages, 0);
+
+// ---------- paper ring textures ----------
+const SC = 2; // supersampling of ring textures
+function sentence(n) { let s = ""; while (s.length < n) s += pick(LEX) + " "; return s.slice(0, n); }
+function drawPage(g, w, h, bright) {
+  const lv = bright ? rint(188, 226) : rint(16, 40);
+  const fill = `rgb(${lv},${lv + 2},${lv + 4})`;
+  const tc = bright ? a => `rgba(20,22,25,${a})` : a => `rgba(214,218,222,${a})`;
+  g.fillStyle = fill; g.fillRect(-w / 2, -h / 2, w, h);
+  g.strokeStyle = bright ? "rgba(255,255,255,0.6)" : "rgba(200,205,210,0.32)";
+  g.lineWidth = 0.35; g.strokeRect(-w / 2, -h / 2, w, h);
+  const m = 2.2, x0 = -w / 2 + m, y0 = -h / 2 + m;
+  g.textAlign = "left"; g.textBaseline = "top";
+  g.font = fnt(1.9, 600); g.fillStyle = tc(0.9);
+  g.fillText(sentence(Math.floor(w / 1.15)).toUpperCase(), x0, y0);
+  g.font = fnt(1.15); g.fillStyle = tc(0.55);
+  g.fillText(sentence(Math.floor(w / 0.8)), x0, y0 + 2.8);
+  let y = y0 + 5.2;
+  const twoCol = R() < 0.6, colW = twoCol ? (w - 2 * m - 1.2) / 2 : w - 2 * m;
+  const fig = R() < 0.45 ? { col: rint(0, twoCol ? 1 : 0), y: y0 + rnd(7, h - 16), h: rnd(6, 10) } : null;
+  const eq = R() < 0.4 ? y0 + rnd(8, h - 10) : null;
+  for (let c = 0; c < (twoCol ? 2 : 1); c++) {
+    const cx = x0 + c * (colW + 1.2);
+    for (y = y0 + 5.4; y < h / 2 - m - 1; y += 1.32) {
+      if (fig && fig.col === c && y > fig.y && y < fig.y + fig.h) {
+        if (y < fig.y + 1.4) {
+          g.strokeStyle = tc(0.6); g.lineWidth = 0.22; g.strokeRect(cx, fig.y, colW, fig.h - 0.8);
+          g.beginPath();
+          const ph = rnd(0, 6), fq = rnd(0.3, 1.2), kind = rint(0, 2);
+          for (let k = 0; k <= 24; k++) {
+            const px = cx + 0.6 + (colW - 1.2) * k / 24;
+            const v = kind === 0 ? Math.sin(k * fq * 0.5 + ph) : kind === 1 ? Math.exp(-k / 8) * 2 - 1 : Math.cos(k * 0.3) * Math.exp(-k / 20);
+            const py = fig.y + (fig.h - 0.8) / 2 - v * (fig.h - 2.5) / 2;
+            k ? g.lineTo(px, py) : g.moveTo(px, py);
+          }
+          g.stroke();
+        }
+        continue;
+      }
+      if (eq && Math.abs(y - eq) < 0.7 && c === 0) {
+        g.font = fnt(1.3); g.fillStyle = tc(0.8);
+        g.fillText(pick(["∂u/∂t + (u·∇)u = −∇p/ρ + ν∇²u", "∇·u = 0", "Δt ≤ C·Δx/|u|max", "f_i(x+e_iΔt) = f_i − (f_i − f_eq)/τ", "ρ_i = Σ m_j W(r_ij, h)"]), cx + 1.5, y);
+        g.font = fnt(1.15); g.fillStyle = tc(0.55);
+        y += 0.8; continue;
+      }
+      const lw = R() < 0.12 ? colW * rnd(0.3, 0.8) : colW;
+      g.fillText(sentence(Math.floor(lw / 0.69)), cx, y);
+    }
+  }
+}
+function makeRing(n, r0, r1, wr, hr, brightP, alpha, seed) {
+  const size = Math.ceil((R_RING_OUT + 30) * 2 * SC);
+  const c = document.createElement("canvas"); c.width = c.height = size;
+  const g = c.getContext("2d");
+  g.translate(size / 2, size / 2); g.scale(SC, SC);
+  const items = [];
+  for (let i = 0; i < n; i++) items.push({ a: (i + rnd(-0.4, 0.4)) / n * TAU, r: rnd(r0, r1), w: rnd(wr[0], wr[1]), h: rnd(hr[0], hr[1]), j: rnd(-0.22, 0.22), b: R() < brightP });
+  items.sort(() => R() - 0.5);
+  g.globalAlpha = alpha;
+  const meta = [];
+  for (const it of items) {
+    g.save();
+    g.rotate(it.a);
+    g.translate(it.r, 0);
+    g.rotate(Math.PI / 2 + it.j);
+    // soft shadow to separate overlapping sheets
+    g.fillStyle = "rgba(0,0,0,0.55)"; g.fillRect(-it.w / 2 + 0.8, -it.h / 2 + 0.8, it.w, it.h);
+    drawPage(g, it.w, it.h, it.b);
+    g.restore();
+    meta.push(it);
+  }
+  return { c, size, meta };
+}
+
+// ---------- rays ----------
+const RAYS = [];
+const NRAYS = 4200;
+for (let i = 0; i < NRAYS; i++) {
+  const long = Math.pow(R(), 2.6);
+  RAYS.push({ a: (i + rnd(0, 1)) / NRAYS * TAU, r0: R_RING_OUT + rnd(-8, 6), L: 8 + 46 * R() + 95 * long, b: 0.08 + 0.32 * Math.pow(R(), 1.6) + 0.3 * long, k: rnd(0, 100) });
+}
+
+// ---------- flow (potential flow past a spinning cylinder) ----------
+const FA = 34, FU = 1, FG = -0.9 * 2 * Math.PI * FA; // radius, free stream, circulation
+const FROT = -0.42;
+function vel(x, y) {
+  const r2 = x * x + y * y, r = Math.sqrt(r2), th = Math.atan2(y, x);
+  const ur = FU * Math.cos(th) * (1 - FA * FA / r2);
+  const ut = -FU * Math.sin(th) * (1 + FA * FA / r2) + FG / (2 * Math.PI * r);
+  return [ur * Math.cos(th) - ut * Math.sin(th), ur * Math.sin(th) + ut * Math.cos(th)];
+}
+const STREAMS = [];
+for (let y0 = -R_FLOW + 4; y0 <= R_FLOW - 4; y0 += 6.2) {
+  let x = -Math.sqrt(R_FLOW * R_FLOW - y0 * y0) - 2, y = y0;
+  const pts = [];
+  const dt = 1.0;
+  for (let k = 0; k < 1400; k++) {
+    pts.push(x, y);
+    const [u1, v1] = vel(x, y);
+    const [u2, v2] = vel(x + u1 * dt / 2, y + v1 * dt / 2);
+    x += u2 * dt; y += v2 * dt;
+    if (x * x + y * y > (R_FLOW + 4) * (R_FLOW + 4) && k > 10) { pts.push(x, y); break; }
+  }
+  if (pts.length > 40) STREAMS.push({ pts: new Float32Array(pts), n: pts.length / 2 });
+}
+const PARTS = [];
+for (const s of STREAMS) {
+  const cnt = Math.max(3, Math.floor(s.n / 30));
+  for (let i = 0; i < cnt; i++) PARTS.push({ s, ph: rnd(0, s.n), sp: rnd(26, 46), tr: rint(10, 34), b: Math.pow(R(), 0.7) });
+}
+
+// ---------- log lines ----------
+const VERB = [["READ", "PARSE", "OCR", "INDEX"], ["EXTRACT", "EQ→SYM", "PARAMS", "FIGREF"], ["BUILD", "COMPILE", "RUN", "PROFILE"], ["COMPARE", "SSIM", "DIFF", "CHECK"], ["PACK", "HASH", "WRITE", "SIGN"]];
+function logLine(i) {
+  const t = i / 7;
+  const st = stageAt(t), v = VERB[st][Math.floor(hash(i * 3.1) * 4)];
+  const a = 1 + Math.floor(hash(i * 1.7) * 12), p = PAPERS[Math.floor(hash(i * 5.3) * 64)];
+  const ts = `${pad(4 + Math.floor((31 + t) / 60), 2)}:${pad(Math.floor(31 + t) % 60, 2)}.${pad(Math.floor(hash(i) * 1000), 3)}`;
+  let obj;
+  if (st === 0) obj = `${p.id} p${pad(1 + Math.floor(hash(i * 9) * p.pages), 2)}/${p.pages}`;
+  else if (st === 1) obj = `eq.(${1 + Math.floor(hash(i * 2) * 40)}) ${p.topic}`;
+  else if (st === 2) obj = `m${pad(1 + Math.floor(hash(i * 4) * 11), 2)}.py ${(hash(i * 8) * 900 + 40).toFixed(0)}ms`;
+  else if (st === 3) obj = `S${pad(1 + Math.floor(hash(i * 6) * 28), 2)} ssim ${(0.95 + hash(i * 7) * 0.049).toFixed(3)}`;
+  else obj = `pkg/${pick2(i, ["methods", "scenes", "refs", "report"])} ok`;
+  const flag = st === 3 && hash(i * 11) < 0.08 ? " ⚑" : (hash(i * 13) < 0.5 ? " ok" : "");
+  return { s: `${ts} a${pad(a, 2)} ${v.padEnd(7)} ${obj}${flag}`, warn: flag === " ⚑" };
+}
+function pick2(i, arr) { return arr[Math.floor(hash(i * 17.3) * arr.length)]; }
+
+const CODE = `import numpy as np
+from lab.mesh import Grid2D
+from lab.refs import load_scene
+
+def cfl_dt(u, v, g, c=0.5):
+    s = np.abs(u)/g.dx + np.abs(v)/g.dy
+    return c / s.max()
+
+def step(rho, u, v, g):
+    dt = cfl_dt(u, v, g)
+    fx = upwind_x(rho, u)
+    fy = upwind_y(rho, v)
+    rho = rho - dt*div(fx, fy, g)
+    m = rho.sum()*g.dx*g.dy
+    assert abs(m - M0) < 1e-10
+    return rho, dt
+
+g = Grid2D(256, 256, L=1.0)
+ref = load_scene("S17")
+rho, u, v = ref.initial()
+M0 = rho.sum()*g.dx*g.dy
+for n in range(4000):
+    rho, dt = step(rho, u, v, g)
+    if n % 50 == 0:
+        log(n, dt, l2(rho, ref))
+save(f"m{mid:02d}", rho)`;
+const CODE_LINES = CODE.split("\n");
+
+// ---------- small field textures for result compare ----------
+const FIELD_W = 34, FIELD_H = 24;
+const fieldCanvases = [];
+for (let i = 0; i < 6; i++) { const c = document.createElement("canvas"); c.width = FIELD_W; c.height = FIELD_H; fieldCanvases.push(c); }
+
+// ---------- grain ----------
+const GRAIN = [];
+for (let k = 0; k < 4; k++) {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+  const g = c.getContext("2d"), id = g.createImageData(256, 256);
+  for (let i = 0; i < id.data.length; i += 4) { const v = R() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  g.putImageData(id, 0, 0); GRAIN.push(c);
+}
+
+// layers
+const centerLayer = document.createElement("canvas"); centerLayer.width = W; centerLayer.height = H;
+const cg = centerLayer.getContext("2d");
+let RING_BACK, RING_FRONT;
+
+// ======================================================================
+//                               DRAWING
+// ======================================================================
+function drawBackground(g, t) {
+  g.fillStyle = BG; g.fillRect(0, 0, W, H);
+  const rg = g.createRadialGradient(CX, CY, 40, CX, CY, 620);
+  rg.addColorStop(0, "rgba(40,43,47,0.55)"); rg.addColorStop(0.45, "rgba(22,24,27,0.35)"); rg.addColorStop(1, "rgba(6,7,8,0)");
+  g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  // dot grid
+  g.fillStyle = ink(0.07);
+  for (let y = 14; y < H; y += 24) for (let x = 14; x < W; x += 24) g.fillRect(x, y, 1, 1);
+}
+
+// ---- header ----
+function drawHeader(g, t) {
+  const a = ss(0.05, 0.8, t);
+  const L = 28, Rr = W - 28;
+  g.save(); g.globalAlpha = a;
+  // title
+  txt(g, "CLAUDE CODE", L, 58, 30, 1, "left", 600);
+  g.font = fnt(30, 600); const tw = g.measureText("CLAUDE CODE ").width;
+  txt(g, "/ PAPER LAB", L + tw, 58, 30, 0.5, "left", 300);
+  txt(g, "AUTONOMOUS LITERATURE → RUNNABLE CODE · REPRODUCIBILITY RUN #0429", L, 80, 9.5, 0.5);
+  // right block: timecode
+  const tc = `T+${pad(Math.floor(t / 60), 2)}:${pad(Math.floor(t) % 60, 2)}.${pad(Math.floor((t % 1) * 100), 2)}`;
+  txt(g, tc, Rr, 50, 18, 0.95, "right", 300);
+  txt(g, "SESSION 7F3A-C2 · 2026.10.14 · NODE lab-04", Rr, 66, 8.5, 0.45, "right");
+  const blink = (Math.floor(t * 2) % 2) ? 0.9 : 0.25;
+  g.fillStyle = ink(blink); g.fillRect(Rr - 214, 41, 6, 6);
+  txt(g, "REC", Rr - 204, 48, 8.5, 0.7);
+  txt(g, `CPU ${(62 + 20 * noise1(t * 1.3)).toFixed(1)}%  MEM ${(41 + 6 * noise1(t * 0.7 + 9)).toFixed(1)}G  GPU ${(78 + 15 * noise1(t + 4)).toFixed(0)}%`, Rr, 80, 8.5, 0.45, "right");
+  // ruler
+  const ry = 94;
+  g.fillStyle = ink(0.25); g.fillRect(L, ry, (Rr - L) * easeOut((t - 0.1) / 1.2), 1);
+  for (let x = L; x <= Rr; x += 8) { const big = (x - L) % 80 === 0; g.fillStyle = ink(big ? 0.45 : 0.15); g.fillRect(x, ry - (big ? 4 : 2), 1, big ? 4 : 2); }
+  g.restore();
+
+  // metrics
+  const vp = stageP(3, t);
+  const reviews = REVIEW_AT.filter(p => vp >= p).length;
+  const M = [
+    { k: "PAPERS", v: Math.floor(64 * easeIO(stageP(0, t)) + 1e-6), max: 64, sub: `${fmtInt(PAGES_TOTAL * easeIO(stageP(0, t)))} pages read` },
+    { k: "AGENTS", v: Math.floor(12 * ss(0.3, 1.9, t) + 1e-6), max: 12, sub: "parallel · live" },
+    { k: "METHOD", v: Math.floor(11 * stageP(2, t) + 1e-6), max: 11, sub: "rebuilt → runnable" },
+    { k: "REF. SCENES", v: Math.floor(28 * stageP(3, t) + 1e-6), max: 28, sub: "cross-checked" },
+    { k: "FURTHER REVIEW", v: reviews, max: 4, sub: "flagged for human" },
+  ];
+  const my = 104, mh = 92, cw = (Rr - L) / 5;
+  M.forEach((m, i) => {
+    const x = L + i * cw, la = ss(0.25 + i * 0.1, 0.9 + i * 0.1, t);
+    g.save(); g.globalAlpha = la;
+    if (i) { g.fillStyle = ink(0.16); g.fillRect(x, my + 6, 1, mh - 12); }
+    const xi = x + (i ? 12 : 0);
+    txt(g, pad(i + 1, 2), xi, my + 16, 8.5, 0.4);
+    txt(g, m.k, xi + 18, my + 16, 9.5, 0.75, "left", 600);
+    // number
+    const active = m.v > 0 && m.v < m.max;
+    txt(g, pad(m.v, 2), xi, my + 60, 44, m.v ? 1 : 0.3, "left", 300);
+    g.font = fnt(44, 300); const nw = g.measureText(pad(m.v, 2)).width;
+    txt(g, `/${m.max}`, xi + nw + 4, my + 60, 11, 0.35);
+    if (active && Math.floor(t * 4) % 2) { g.fillStyle = ink(0.8); g.fillRect(xi + nw + 4, my + 26, 4, 4); }
+    txt(g, m.sub, xi, my + 76, 8.5, 0.45);
+    // micro ticks
+    const tw2 = cw - 26, n = m.max, pitch = tw2 / n;
+    for (let k = 0; k < n; k++) {
+      const on = k < m.v;
+      g.fillStyle = on ? ink(i === 4 ? 0.95 : 0.8) : ink(0.13);
+      const bw = Math.max(1, pitch - (n > 20 ? 1 : 2));
+      g.fillRect(xi + k * pitch, my + 84, bw, on ? 5 : 3);
+    }
+    g.restore();
+  });
+
+  // progress steps
+  const py = 214, ph = 40, gap = 6, sw = (Rr - L - gap * 4) / 5;
+  g.save(); g.globalAlpha = ss(0.4, 1.2, t);
+  txt(g, "PIPELINE", L, py - 6, 8.5, 0.45);
+  const total = STAGES.reduce((s, _, i) => s + stageP(i, t), 0) / 5;
+  txt(g, `${(total * 100).toFixed(1)}% · ETA ${Math.max(0, 21 - t).toFixed(1)}s`, Rr, py - 6, 8.5, 0.55, "right");
+  STAGES.forEach((s, i) => {
+    const x = L + i * (sw + gap), p = stageP(i, t), act = stageAt(t) === i && p < 1, done = p >= 1;
+    g.strokeStyle = ink(act ? 0.7 : done ? 0.4 : 0.18); g.lineWidth = 1;
+    g.strokeRect(x + 0.5, py + 0.5, sw - 1, ph - 1);
+    // fill
+    if (p > 0) {
+      g.fillStyle = ink(done ? 0.1 : 0.16); g.fillRect(x + 1, py + 1, (sw - 2) * p, ph - 2);
+      g.fillStyle = ink(0.95); g.fillRect(x + 1, py + ph - 4, (sw - 2) * p, 3);
+    }
+    // hatch on active
+    if (act) {
+      g.save(); g.beginPath(); g.rect(x + 1, py + 1, (sw - 2) * p, ph - 5); g.clip();
+      g.strokeStyle = ink(0.12); g.beginPath();
+      const off = (t * 30) % 8;
+      for (let k = -ph; k < sw; k += 8) { g.moveTo(x + k + off, py + ph); g.lineTo(x + k + off + ph, py); }
+      g.stroke(); g.restore();
+    }
+    txt(g, pad(i + 1, 2), x + 8, py + 16, 8.5, 0.45);
+    txt(g, s[0], x + 26, py + 16, 11, act || done ? 1 : 0.4, "left", 600);
+    const st = done ? "DONE" : act ? `${(p * 100).toFixed(0)}%` : "QUEUED";
+    txt(g, st, x + sw - 8, py + 16, 8.5, act ? 0.9 : done ? 0.6 : 0.3, "right");
+    // micro segments
+    for (let k = 0; k < 24; k++) {
+      g.fillStyle = ink(k / 24 < p ? 0.55 : 0.1);
+      g.fillRect(x + 8 + k * ((sw - 16) / 24), py + 26, (sw - 16) / 24 - 1.5, 3);
+    }
+    if (i < 4) { g.fillStyle = ink(done ? 0.6 : 0.2); g.fillRect(x + sw, py + ph / 2, gap, 1); }
+  });
+  g.restore();
+}
+
+// ---- side columns ----
+function drawSides(g, t) {
+  const a = ss(0.8, 1.8, t);
+  if (a <= 0) return;
+  g.save(); g.globalAlpha = a;
+  const L = 28, top = 292;
+  // paper list
+  txt(g, "CORPUS · 64", L, top, 9, 0.8, "left", 600);
+  g.fillStyle = ink(0.25); g.fillRect(L, top + 5, 128, 1);
+  const read = 64 * easeIO(stageP(0, t));
+  const cur = Math.min(63, Math.floor(read));
+  for (let i = 0; i < 64; i++) {
+    const y = top + 18 + i * 10.2, p = PAPERS[i];
+    const done = i < Math.floor(read), now = i === cur && read < 64;
+    const extracted = stageP(1, t) * 64 > i;
+    const mark = extracted ? "◆" : done ? "■" : now ? "▶" : "·";
+    const al = now ? 1 : done ? 0.62 : 0.24;
+    if (now) { g.fillStyle = ink(0.12); g.fillRect(L - 3, y - 7.5, 134, 10); }
+    txt(g, `${pad(i + 1, 2)} ${mark} ${p.id} ${p.topic}`.slice(0, 31), L, y, 7, al);
+  }
+  // right column: methods
+  const Rr = W - 28, rx = Rr - 132;
+  txt(g, "METHODS · 11", rx, top, 9, 0.8, "left", 600);
+  g.fillStyle = ink(0.25); g.fillRect(rx, top + 5, 132, 1);
+  const bp = stageP(2, t) * 11, ep = stageP(1, t);
+  METHODS.forEach((m, i) => {
+    const y = top + 20 + i * 24;
+    const built = bp >= i + 1, building = bp > i && !built;
+    const al = built ? 0.85 : building ? 1 : ep > i / 11 ? 0.45 : 0.22;
+    txt(g, `M${pad(i + 1, 2)}`, rx, y, 7, al * 0.7);
+    txt(g, m, rx + 22, y, 7, al);
+    const pr = clamp(bp - i);
+    g.fillStyle = ink(0.1); g.fillRect(rx + 22, y + 5, 110, 2);
+    g.fillStyle = ink(building ? 0.95 : 0.55); g.fillRect(rx + 22, y + 5, 110 * pr, 2);
+    const st = built ? "RUN ✓" : building ? `${(pr * 100).toFixed(0)}%` : ep > i / 11 ? "SPEC" : "—";
+    txt(g, st, Rr, y, 6.5, al * 0.8, "right");
+  });
+  // scenes grid
+  const sy = top + 20 + 11 * 24 + 18;
+  txt(g, "REF. SCENES · 28", rx, sy, 9, 0.8, "left", 600);
+  g.fillStyle = ink(0.25); g.fillRect(rx, sy + 5, 132, 1);
+  const vp = stageP(3, t) * 28;
+  for (let i = 0; i < 28; i++) {
+    const cx = rx + (i % 7) * 19, cy = sy + 14 + Math.floor(i / 7) * 26;
+    const checked = vp > i + 1, chk = vp > i && !checked;
+    const rev = REVIEW_SCENES.includes(i);
+    g.strokeStyle = ink(checked ? 0.55 : chk ? 1 : 0.18); g.lineWidth = 1;
+    g.strokeRect(cx + 0.5, cy + 0.5, 16, 16);
+    // tiny thumbnail of scene
+    g.save(); g.beginPath(); g.rect(cx + 1, cy + 1, 15, 15); g.clip();
+    g.strokeStyle = ink(checked ? 0.5 : 0.18); g.lineWidth = 0.6; g.beginPath();
+    for (let k = 0; k < 4; k++) { const yy = cy + 3 + k * 3.5; g.moveTo(cx, yy); for (let xx = 0; xx <= 16; xx += 2) g.lineTo(cx + xx, yy + Math.sin(xx * 0.5 + i + k + t * 0.8) * 1.4); }
+    g.stroke(); g.restore();
+    if (checked && rev) { g.strokeStyle = ink(0.95); g.beginPath(); g.moveTo(cx + 3, cy + 3); g.lineTo(cx + 14, cy + 14); g.moveTo(cx + 14, cy + 3); g.lineTo(cx + 3, cy + 14); g.stroke(); }
+    else if (checked) { g.fillStyle = ink(0.85); g.fillRect(cx + 12, cy + 12, 4, 4); }
+    txt(g, pad(i + 1, 2), cx, cy + 24, 6, checked ? 0.6 : 0.3);
+  }
+  // vertical rulers at the very edges
+  for (let y = 280; y <= 1000; y += 10) {
+    const big = y % 100 === 0;
+    g.fillStyle = ink(big ? 0.4 : 0.14);
+    g.fillRect(8, y, big ? 8 : 4, 1); g.fillRect(W - 8 - (big ? 8 : 4), y, big ? 8 : 4, 1);
+  }
+  g.restore();
+}
+let REVIEW_SCENES = [];
+
+// ---- center: ring, rays, flow ----
+function drawCenter(g, t, cam) {
+  g.clearRect(0, 0, W, H);
+  g.save();
+  applyCam(g, cam, 1.0);
+  const intro = easeOut((t - 0.2) / 1.8);
+  const st = stageAt(t);
+  g.translate(CX, CY);
+  const zs = 0.9 + 0.1 * intro; g.scale(zs, zs);
+
+  const rotB = 0.045 * t + 0.4, rotF = -0.03 * t;
+  const sweep = -Math.PI / 2 + t * (st === 0 ? 1.15 : 0.7) + (st === 0 ? 0 : 0);
+
+  // halo
+  const hg = g.createRadialGradient(0, 0, R_RING_IN - 20, 0, 0, R_RING_OUT + 140);
+  hg.addColorStop(0, "rgba(220,225,230,0)"); hg.addColorStop(0.35, `rgba(220,225,230,${0.06 * intro})`); hg.addColorStop(1, "rgba(220,225,230,0)");
+  g.fillStyle = hg; g.beginPath(); g.arc(0, 0, R_RING_OUT + 140, 0, TAU); g.fill();
+
+  // rays
+  g.save();
+  g.globalCompositeOperation = "lighter";
+  const grow = easeOut((t - 0.6) / 2.2);
+  const buckets = [[], [], [], [], []];
+  const tips = [];
+  const rr = rotB * 0.35;
+  for (let i = 0; i < RAYS.length; i++) {
+    const ry = RAYS[i];
+    const ang = ry.a + rr;
+    let d = (ang - sweep) % TAU; if (d > 0) d -= TAU; d = -d; // angle behind the sweep
+    const boost = Math.exp(-d * 2.2) * (st === 0 ? 1.0 : 0.6);
+    const m = 0.5 + 0.5 * noise1(ry.a * 9 + t * 0.35 + ry.k * 0.01) + 0.25 * Math.sin(t * 1.3 + ry.k);
+    const L = ry.L * m * (1 + 0.9 * boost) * grow;
+    if (L < 1) continue;
+    const al = ry.b * (0.55 + 0.9 * boost);
+    const bi = Math.min(4, Math.floor(al * 9));
+    const c = Math.cos(ang), s = Math.sin(ang);
+    buckets[bi].push(c * ry.r0, s * ry.r0, c * (ry.r0 + L), s * (ry.r0 + L));
+    if (i % 5 === 0 && L > 30) tips.push(c * (ry.r0 + L), s * (ry.r0 + L), al);
+  }
+  g.lineWidth = 0.6;
+  buckets.forEach((b, bi) => {
+    g.strokeStyle = `rgba(220,226,232,${(0.07 + bi * 0.09) * intro})`;
+    g.beginPath();
+    for (let k = 0; k < b.length; k += 4) { g.moveTo(b[k], b[k + 1]); g.lineTo(b[k + 2], b[k + 3]); }
+    g.stroke();
+  });
+  for (let k = 0; k < tips.length; k += 3) { g.fillStyle = `rgba(235,238,240,${Math.min(0.8, tips[k + 2] * 1.6) * intro})`; g.fillRect(tips[k] - 0.6, tips[k + 1] - 0.6, 1.2, 1.2); }
+  g.restore();
+
+  // outer scale rings
+  g.save();
+  g.globalAlpha = intro;
+  g.strokeStyle = ink(0.28); g.lineWidth = 0.8;
+  g.beginPath(); g.arc(0, 0, R_RING_OUT + 4, 0, TAU); g.stroke();
+  g.save(); g.rotate(-rotB * 0.5);
+  g.beginPath();
+  for (let k = 0; k < 360; k++) {
+    const a2 = k / 360 * TAU, big = k % 10 === 0, l = big ? 7 : k % 5 === 0 ? 4 : 2;
+    g.moveTo(Math.cos(a2) * (R_RING_OUT + 8), Math.sin(a2) * (R_RING_OUT + 8));
+    g.lineTo(Math.cos(a2) * (R_RING_OUT + 8 + l), Math.sin(a2) * (R_RING_OUT + 8 + l));
+  }
+  g.strokeStyle = ink(0.32); g.lineWidth = 0.6; g.stroke();
+  g.font = fnt(6.5); g.fillStyle = ink(0.5); g.textAlign = "center";
+  for (let k = 0; k < 36; k++) {
+    g.save(); g.rotate(k / 36 * TAU); g.translate(R_RING_OUT + 24, 0); g.rotate(Math.PI / 2);
+    g.fillText(pad(k * 10, 3), 0, 2); g.restore();
+  }
+  g.restore();
+  // dashed far ring
+  g.setLineDash([2, 6]); g.strokeStyle = ink(0.16);
+  g.beginPath(); g.arc(0, 0, R_RING_OUT + 92, 0, TAU); g.stroke();
+  g.setLineDash([]);
+  // arc segments rotating
+  g.strokeStyle = ink(0.45); g.lineWidth = 1.4;
+  for (let k = 0; k < 6; k++) {
+    const a0 = rotF * 1.6 + k * TAU / 6;
+    g.beginPath(); g.arc(0, 0, R_RING_OUT + 40, a0, a0 + 0.35); g.stroke();
+  }
+  g.lineWidth = 0.6; g.strokeStyle = ink(0.2);
+  g.beginPath(); g.arc(0, 0, R_RING_OUT + 40, 0, TAU); g.stroke();
+  g.restore();
+
+  // page rings
+  g.save();
+  g.globalAlpha = intro;
+  g.imageSmoothingQuality = "high";
+  const rb = RING_BACK, rf = RING_FRONT;
+  g.save(); g.rotate(rotB); g.drawImage(rb.c, -rb.size / 2 / SC, -rb.size / 2 / SC, rb.size / SC, rb.size / SC); g.restore();
+  g.save(); g.rotate(rotF); g.drawImage(rf.c, -rf.size / 2 / SC, -rf.size / 2 / SC, rf.size / SC, rf.size / SC); g.restore();
+  // scanning sweep over the paper ring
+  g.globalCompositeOperation = "lighter";
+  const cgd = g.createConicGradient(sweep, 0, 0);
+  const sa = st === 0 ? 0.32 : 0.16;
+  cgd.addColorStop(0, `rgba(230,235,240,${sa})`); cgd.addColorStop(0.004, "rgba(230,235,240,0)");
+  cgd.addColorStop(0.78, "rgba(230,235,240,0)"); cgd.addColorStop(1, `rgba(230,235,240,${sa * 0.55})`);
+  g.fillStyle = cgd;
+  g.beginPath(); g.arc(0, 0, R_RING_OUT + 2, 0, TAU); g.arc(0, 0, R_RING_IN - 6, 0, TAU, true); g.fill();
+  g.strokeStyle = ink(0.7 * intro); g.lineWidth = 1;
+  g.beginPath(); g.moveTo(Math.cos(sweep) * (R_RING_IN - 8), Math.sin(sweep) * (R_RING_IN - 8)); g.lineTo(Math.cos(sweep) * (R_RING_OUT + 18), Math.sin(sweep) * (R_RING_OUT + 18)); g.stroke();
+  g.globalCompositeOperation = "source-over";
+  // inner edge darkening
+  g.fillStyle = BG; g.beginPath(); g.arc(0, 0, R_RING_IN - 6, 0, TAU); g.fill();
+  g.strokeStyle = ink(0.3); g.lineWidth = 0.8; g.beginPath(); g.arc(0, 0, R_RING_IN - 6, 0, TAU); g.stroke();
+  g.restore();
+
+  // flow field
+  drawFlow(g, t, intro);
+
+  // callouts on pages being read
+  drawCallouts(g, t, rotB, intro);
+
+  g.restore();
+}
+
+function drawFlow(g, t, intro) {
+  g.save();
+  g.beginPath(); g.arc(0, 0, R_FLOW, 0, TAU); g.clip();
+  // polar grid
+  g.strokeStyle = ink(0.07); g.lineWidth = 0.6;
+  for (let r = 40; r < R_FLOW; r += 40) { g.beginPath(); g.arc(0, 0, r, 0, TAU); g.stroke(); }
+  g.beginPath();
+  for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; g.moveTo(Math.cos(a) * 40, Math.sin(a) * 40); g.lineTo(Math.cos(a) * R_FLOW, Math.sin(a) * R_FLOW); }
+  g.stroke();
+  g.rotate(FROT + 0.05 * Math.sin(t * 0.2));
+  // streamlines
+  g.strokeStyle = ink(0.07 * intro); g.lineWidth = 0.6;
+  g.beginPath();
+  for (const s of STREAMS) { for (let k = 0; k < s.n; k += 3) { const x = s.pts[2 * k], y = s.pts[2 * k + 1]; k ? g.lineTo(x, y) : g.moveTo(x, y); } }
+  g.stroke();
+  // particles with trails
+  g.globalCompositeOperation = "lighter";
+  const bk = [[], [], [], []];
+  for (const p of PARTS) {
+    const n = p.s.n, pos = (p.ph + t * p.sp) % n;
+    const i1 = Math.floor(pos), i0 = Math.max(0, i1 - p.tr);
+    if (i1 - i0 < 2) continue;
+    const bi = Math.min(3, Math.floor(p.b * 4));
+    bk[bi].push(p.s.pts, i0, i1, pos - i1);
+  }
+  bk.forEach((b, bi) => {
+    g.strokeStyle = `rgba(225,230,235,${(0.12 + bi * 0.16) * intro})`;
+    g.lineWidth = 0.7 + bi * 0.15;
+    g.beginPath();
+    for (let k = 0; k < b.length; k += 4) {
+      const pts = b[k], i0 = b[k + 1], i1 = b[k + 2];
+      g.moveTo(pts[2 * i0], pts[2 * i0 + 1]);
+      for (let j = i0 + 1; j <= i1; j++) g.lineTo(pts[2 * j], pts[2 * j + 1]);
+    }
+    g.stroke();
+    g.fillStyle = `rgba(240,243,245,${(0.3 + bi * 0.2) * intro})`;
+    for (let k = 0; k < b.length; k += 4) { const pts = b[k], i1 = b[k + 2]; g.fillRect(pts[2 * i1] - 0.8, pts[2 * i1 + 1] - 0.8, 1.6, 1.6); }
+  });
+  g.globalCompositeOperation = "source-over";
+  // cylinder
+  g.fillStyle = BG; g.beginPath(); g.arc(0, 0, FA - 1, 0, TAU); g.fill();
+  g.save(); g.beginPath(); g.arc(0, 0, FA - 1, 0, TAU); g.clip();
+  g.strokeStyle = ink(0.22); g.lineWidth = 0.6; g.beginPath();
+  for (let k = -FA * 2; k < FA * 2; k += 4) { g.moveTo(k, -FA); g.lineTo(k + FA * 2, FA); }
+  g.stroke(); g.restore();
+  g.strokeStyle = ink(0.75); g.lineWidth = 1; g.beginPath(); g.arc(0, 0, FA, 0, TAU); g.stroke();
+  // spin indicator
+  g.strokeStyle = ink(0.5); g.lineWidth = 0.8; g.setLineDash([3, 3]); g.lineDashOffset = -t * 12;
+  g.beginPath(); g.arc(0, 0, FA + 7, 0, TAU); g.stroke(); g.setLineDash([]);
+  g.restore();
+
+  // labels inside (unrotated)
+  g.save(); g.globalAlpha = intro;
+  txt(g, "Γ", 0, 6, 16, 0.9, "center", 300);
+  g.fillStyle = "rgba(6,7,8,0.8)"; g.fillRect(-78, R_FLOW - 32, 156, 24);
+  txt(g, "ψ = U·y(1−a²/r²) + Γ/2π·ln r", 0, R_FLOW - 22, 7.5, 0.55, "center");
+  txt(g, `Re ${fmtInt(3900 + 40 * Math.sin(t))}  ·  St 0.21`, 0, R_FLOW - 12, 7, 0.35, "center");
+  // crosshair
+  g.strokeStyle = ink(0.25); g.lineWidth = 0.6; g.beginPath();
+  g.moveTo(-R_FLOW, 0); g.lineTo(-R_FLOW + 10, 0); g.moveTo(R_FLOW - 10, 0); g.lineTo(R_FLOW, 0);
+  g.moveTo(0, -R_FLOW); g.lineTo(0, -R_FLOW + 10); g.moveTo(0, R_FLOW - 10); g.lineTo(0, R_FLOW); g.stroke();
+  g.restore();
+  g.strokeStyle = ink(0.35 * intro); g.lineWidth = 0.8; g.beginPath(); g.arc(0, 0, R_FLOW, 0, TAU); g.stroke();
+
+  drawFormulas(g, t);
+}
+
+// Formula overlays: appear occasionally, typed in, then dissolve.
+const FORMULAS = [
+  { t0: 2.6, t1: 6.6, x: -150, y: -118, main: "∂ρ/∂t + ∇·(ρu) = 0", tag: "MASS CONSERVATION", note: "eq.(3) · 2207.10431 · continuity", probe: [52, -60] },
+  { t0: 7.4, t1: 11.8, x: -40, y: 86, main: "CFL = u·Δt/Δx ≤ 0.5", tag: "STABILITY · CFL", note: "adaptive Δt · upwind FV", probe: [-70, 60], grid: true },
+  { t0: 12.6, t1: 16.8, x: -150, y: -118, main: "|Σm(t) − Σm(0)| < 1e−10", tag: "MASS CHECK · 28 SCENES", note: "Δm = 2.1e−12 ✓ conserved", probe: [70, -30] },
+  { t0: 17.4, t1: 20.6, x: -40, y: 86, main: "Δt = C·min(Δx/|u|)", tag: "TIME STEP", note: "C = 0.5 · Δt = 1.92e−3 s", probe: [-60, 50] },
+];
+function drawFormulas(g, t) {
+  for (const F of FORMULAS) {
+    if (t < F.t0 || t > F.t1) continue;
+    const a = ss(F.t0, F.t0 + 0.4, t) * (1 - ss(F.t1 - 0.5, F.t1, t));
+    const typed = Math.floor(F.main.length * clamp((t - F.t0 - 0.2) / 0.8 + 0.001));
+    g.save(); g.globalAlpha = a;
+    g.font = fnt(17, 400);
+    const w = Math.max(g.measureText(F.main).width, 150) + 24, h = 58;
+    const x = F.x, y = F.y;
+    g.fillStyle = "rgba(6,7,8,0.82)"; g.fillRect(x, y, w, h);
+    corners(g, x, y, w, h, 6, 0.8);
+    g.fillStyle = ink(0.9); g.fillRect(x, y, 3, 3);
+    txt(g, F.tag, x + 10, y + 13, 7.5, 0.6, "left", 600);
+    txt(g, F.main.slice(0, typed), x + 10, y + 36, 17, 1, "left", 400);
+    if (typed < F.main.length && Math.floor(t * 8) % 2) { g.fillStyle = ink(0.9); g.font = fnt(17); g.fillRect(x + 10 + g.measureText(F.main.slice(0, typed)).width + 1, y + 23, 8, 16); }
+    txt(g, F.note, x + 10, y + 50, 7.5, 0.5 * ss(F.t0 + 1.0, F.t0 + 1.4, t));
+    // leader line to a probe point in the flow
+    const [px, py] = F.probe;
+    const lx = px < x ? x : x + w, ly = y + h / 2;
+    const lp = ss(F.t0 + 0.3, F.t0 + 0.9, t);
+    g.strokeStyle = ink(0.6); g.lineWidth = 0.7; g.beginPath();
+    g.moveTo(lx, ly); g.lineTo(lerp(lx, px, lp), lerp(ly, py, lp)); g.stroke();
+    if (lp > 0.95) {
+      g.strokeStyle = ink(0.9); g.strokeRect(px - 4, py - 4, 8, 8);
+      g.beginPath(); g.moveTo(px - 9, py); g.lineTo(px - 5, py); g.moveTo(px + 5, py); g.lineTo(px + 9, py); g.moveTo(px, py - 9); g.lineTo(px, py - 5); g.moveTo(px, py + 5); g.lineTo(px, py + 9); g.stroke();
+    }
+    if (F.grid) {
+      // mesh patch around the probe: Δx cells, one cell lit as a particle crosses
+      const gx = px - 24, gy = py - 24, cs = 8;
+      g.strokeStyle = ink(0.35); g.lineWidth = 0.5; g.beginPath();
+      for (let k = 0; k <= 6; k++) { g.moveTo(gx + k * cs, gy); g.lineTo(gx + k * cs, gy + 6 * cs); g.moveTo(gx, gy + k * cs); g.lineTo(gx + 6 * cs, gy + k * cs); }
+      g.stroke();
+      const ci = Math.floor((t * 3) % 6);
+      g.fillStyle = ink(0.25); g.fillRect(gx + ci * cs, gy + 3 * cs, cs, cs);
+      g.fillStyle = ink(1); g.fillRect(gx + ((t * 3) % 6) * cs - 1, gy + 3.5 * cs - 1, 2, 2);
+      txt(g, `Δx`, gx + 2.5 * cs, gy - 3, 6.5, 0.7, "center");
+      txt(g, `max ${(0.41 + 0.05 * noise1(t * 2)).toFixed(3)}`, gx + 3 * cs, gy + 6 * cs + 9, 6.5, 0.7, "center");
+    }
+    g.restore();
+  }
+  // final package stamp
+  if (t > 20.6) {
+    const a = ss(20.6, 21.1, t);
+    g.save(); g.globalAlpha = a;
+    const w = 236, h = 66, x = -w / 2, y = -h / 2 - 92;
+    g.fillStyle = "rgba(6,7,8,0.88)"; g.fillRect(x, y, w, h);
+    g.strokeStyle = ink(0.85); g.lineWidth = 1; g.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    txt(g, "PACKAGE COMPLETE ✓", 0, y + 22, 13, 1, "center", 600);
+    txt(g, "paper_lab_release.tar · sha 9c41e07", 0, y + 38, 7.5, 0.6, "center");
+    txt(g, "11 methods · 28 scenes · 4 for review", 0, y + 52, 7.5, 0.6, "center");
+    g.restore();
+  }
+}
+
+function drawCallouts(g, t, rotB, intro) {
+  // a page is pulled out roughly every second while reading/extracting
+  for (let k = 0; k < 24; k++) {
+    const t0 = 1.6 + k * 0.82;
+    if (t < t0 || t > t0 + 2.4) continue;
+    const it = RING_BACK.meta[Math.floor(hash(k * 7.7) * RING_BACK.meta.length)];
+    const ang = it.a + rotB;
+    const a = ss(t0, t0 + 0.3, t) * (1 - ss(t0 + 1.9, t0 + 2.4, t)) * intro;
+    const c = Math.cos(ang), s = Math.sin(ang);
+    const px = c * it.r, py = s * it.r;
+    const ox = c * (R_RING_OUT + 62), oy = s * (R_RING_OUT + 62);
+    const side = ox >= 0 ? 1 : -1;
+    const ex = clamp(ox + side * 22, -345, 345);
+    g.save(); g.globalAlpha = a;
+    // bracket on the page
+    g.strokeStyle = ink(0.95); g.lineWidth = 0.9;
+    g.save(); g.translate(px, py); g.rotate(ang + Math.PI / 2);
+    corners(g, -it.w / 2 - 3, -it.h / 2 - 3, it.w + 6, it.h + 6, 4, 0.95);
+    g.restore();
+    const lp = ss(t0 + 0.05, t0 + 0.45, t);
+    g.beginPath(); g.moveTo(c * (it.r + it.h / 2 + 4), s * (it.r + it.h / 2 + 4));
+    g.lineTo(lerp(c * (it.r + it.h / 2 + 4), ox, lp), lerp(s * (it.r + it.h / 2 + 4), oy, lp));
+    if (lp >= 1) g.lineTo(ex, oy);
+    g.stroke();
+    if (lp >= 1) {
+      const p = PAPERS[Math.floor(hash(k * 3.3) * 64)];
+      const l1 = `arXiv:${p.id}`, l2 = `p.${pad(1 + Math.floor(hash(k) * p.pages), 2)} · ${["eq", "fig", "tab", "alg"][k % 4]}.(${1 + Math.floor(hash(k * 2) * 20)}) · ${(0.8 + hash(k * 5) * 0.19).toFixed(2)}`;
+      g.font = fnt(8); const tw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + 10;
+      const bx = side > 0 ? Math.min(ex, 362 - tw) : Math.max(ex - tw, -362);
+      g.fillStyle = "rgba(6,7,8,0.85)"; g.fillRect(bx, oy - 11, tw, 24);
+      g.fillStyle = ink(0.9); g.fillRect(side > 0 ? bx : bx + tw - 2, oy - 11, 2, 24);
+      txt(g, l1, bx + 5, oy - 1, 8, 0.95, "left", 600);
+      txt(g, l2, bx + 5, oy + 9, 7, 0.6);
+    }
+    g.restore();
+  }
+}
+
+// ---- bottom panels ----
+const PANEL_Y = 1014, PANEL_H = 152, PANEL_GAP = 10;
+function panelRect(i) {
+  const L = 28, cw = (W - 56 - 3 * PANEL_GAP) / 4;
+  const col = i % 4, row = Math.floor(i / 4);
+  return { x: L + col * (cw + PANEL_GAP), y: PANEL_Y + row * (PANEL_H + PANEL_GAP), w: cw, h: PANEL_H };
+}
+const PANELS = [
+  ["AGENT.LOG", drawLog],
+  ["BUILD / solver.py", drawCode],
+  ["SIGNAL.PROBE", drawSignal],
+  ["AGENTS ×12", drawAgents],
+  ["RESULT.COMPARE", drawCompare],
+  ["MATCH / REVIEW", drawMatrix],
+  ["RESIDUAL.L2", drawResidual],
+  ["IO.STREAM", drawIO],
+];
+function drawPanels(g, t) {
+  PANELS.forEach(([title, fn], i) => {
+    const r = panelRect(i);
+    const a = ss(0.5 + i * 0.08, 1.3 + i * 0.08, t);
+    if (a <= 0) return;
+    g.save(); g.globalAlpha = a;
+    g.fillStyle = "rgba(14,15,17,0.9)"; g.fillRect(r.x, r.y, r.w, r.h);
+    g.strokeStyle = ink(0.2); g.lineWidth = 1; g.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+    corners(g, r.x, r.y, r.w, r.h, 5, 0.6);
+    g.fillStyle = ink(0.12); g.fillRect(r.x + 1, r.y + 17, r.w - 2, 1);
+    txt(g, pad(i + 1, 2), r.x + 7, r.y + 12, 7.5, 0.4);
+    txt(g, title, r.x + 21, r.y + 12, 8, 0.85, "left", 600);
+    const on = (Math.floor(t * 2 + i * 0.37) % 2) === 0;
+    g.fillStyle = ink(on ? 0.9 : 0.3); g.beginPath(); g.arc(r.x + r.w - 10, r.y + 9, 2, 0, TAU); g.fill();
+    g.save(); g.beginPath(); g.rect(r.x + 1, r.y + 18, r.w - 2, r.h - 19); g.clip();
+    fn(g, t, r.x + 7, r.y + 22, r.w - 14, r.h - 27, r);
+    g.restore();
+    g.restore();
+  });
+}
+
+function drawLog(g, t, x, y, w, h, r) {
+  const rate = 7, lh = 11.2;
+  const cur = t * rate;
+  const last = Math.floor(cur), frac = cur - last;
+  const rows = Math.floor(h / lh) + 1;
+  txt(g, `${fmtInt(last * 37 + 1200)} ev`, r.x + r.w - 18, r.y + 12, 7, 0.45, "right");
+  for (let k = 0; k <= rows; k++) {
+    const i = last - k;
+    if (i < 0) break;
+    const L = logLine(i);
+    const yy = y + h - 4 - (k - 1 + frac) * lh - lh + 9;
+    const fresh = k === 0;
+    const a = fresh ? 1 : 0.62 - k * 0.035;
+    if (fresh) { g.fillStyle = ink(0.08); g.fillRect(x - 3, yy - 8.5, w + 6, 11); }
+    txt(g, L.s.slice(0, 44), x, yy, 7.4, L.warn ? Math.max(a, 0.9) : a, "left", L.warn ? 600 : 400);
+  }
+}
+
+function drawCode(g, t, x, y, w, h, r) {
+  const total = Math.max(0, t - 0.8) * 46, pass = Math.floor(total / (CODE.length + 60));
+  const chars = Math.floor(total % (CODE.length + 60));
+  let left = chars, lines = [];
+  for (const ln of CODE_LINES) { if (left <= 0) break; lines.push(ln.slice(0, left)); left -= ln.length + 1; }
+  if (!lines.length) lines = [""];
+  const lh = 11, rows = Math.floor(h / lh);
+  const start = Math.max(0, lines.length - rows);
+  txt(g, chars > CODE.length ? "✓ saved" : `ln ${lines.length} · pass ${pass + 1}`, r.x + r.w - 18, r.y + 12, 7, 0.45, "right");
+  for (let k = start; k < lines.length; k++) {
+    const yy = y + 8 + (k - start) * lh;
+    txt(g, pad(k + 1, 2), x, yy, 7.2, 0.28);
+    const s = lines[k];
+    const kw = /^(\s*)(def|for|if|return|assert|import|from)\b/.exec(s);
+    txt(g, s, x + 16, yy, 7.4, kw ? 0.95 : 0.66, "left", kw ? 600 : 400);
+    if (k === lines.length - 1 && Math.floor(t * 3) % 2 === 0) {
+      g.font = fnt(7.4); g.fillStyle = ink(0.9); g.fillRect(x + 16 + g.measureText(s).width + 1, yy - 7, 4.5, 9);
+    }
+  }
+}
+
+function drawSignal(g, t, x, y, w, h, r) {
+  g.strokeStyle = ink(0.07); g.lineWidth = 0.6; g.beginPath();
+  for (let k = 0; k <= 8; k++) { g.moveTo(x + k * w / 8, y); g.lineTo(x + k * w / 8, y + h - 12); }
+  for (let k = 0; k <= 4; k++) { g.moveTo(x, y + k * (h - 12) / 4); g.lineTo(x + w, y + k * (h - 12) / 4); }
+  g.stroke();
+  const mid = y + (h - 12) / 2;
+  const tr = [
+    { a: 0.95, f: (u) => Math.sin(u * 0.11 + t * 6) * 0.55 + Math.sin(u * 0.033 - t * 2.1) * 0.3 + (hash2(Math.floor(u), Math.floor(t * 30)) - 0.5) * 0.08 },
+    { a: 0.45, f: (u) => Math.sin(u * 0.05 + t * 3.2) * 0.7 * Math.cos(u * 0.012 + t) },
+    { a: 0.25, f: (u) => ((u * 0.04 + t * 2) % 2 < 1 ? 0.35 : -0.35) },
+  ];
+  tr.forEach(T => {
+    g.strokeStyle = ink(T.a); g.lineWidth = 0.9; g.beginPath();
+    for (let u = 0; u <= w; u += 1.5) { const v = T.f(u); u ? g.lineTo(x + u, mid - v * (h - 16) / 2) : g.moveTo(x, mid - v * (h - 16) / 2); }
+    g.stroke();
+  });
+  const cx = x + ((t * 40) % w);
+  g.fillStyle = ink(0.35); g.fillRect(cx, y, 1, h - 12);
+  txt(g, `f ${(2.41 + 0.05 * noise1(t * 3)).toFixed(3)}kHz  A ${(0.62 + 0.1 * noise1(t * 2 + 5)).toFixed(2)}  φ ${((t * 57) % 360).toFixed(0)}°`, x, y + h - 1, 7, 0.6);
+  txt(g, "CH1 CH2 CH3", r.x + r.w - 18, r.y + 12, 7, 0.45, "right");
+}
+
+const AGENT_TASKS = [["read", "ocr", "parse"], ["extract", "sym", "params"], ["build", "compile", "run"], ["compare", "ssim", "diff"], ["pack", "hash", "sign"]];
+function drawAgents(g, t, x, y, w, h, r) {
+  const n = Math.floor(12 * ss(0.3, 1.9, t) + 1e-6);
+  const lh = (h - 2) / 12;
+  const st = stageAt(t);
+  txt(g, `${n}/12 up`, r.x + r.w - 18, r.y + 12, 7, 0.45, "right");
+  for (let i = 0; i < 12; i++) {
+    const yy = y + 7 + i * lh;
+    const alive = i < n;
+    const rate = 0.35 + hash(i * 3.7) * 0.5;
+    const cyc = t * rate + hash(i * 1.3);
+    const p = cyc % 1;
+    const task = AGENT_TASKS[st][Math.floor(cyc) % 3];
+    const done = t > 21 ? 1 : 0;
+    const a = alive ? 0.75 : 0.2;
+    txt(g, `A${pad(i + 1, 2)}`, x, yy, 7, a, "left", 600);
+    txt(g, alive ? (done ? "idle" : task) : "spawn", x + 22, yy, 7, a * 0.8);
+    const bx = x + 70, bw = w - 70 - 30, seg = 22;
+    for (let k = 0; k < seg; k++) {
+      const on = alive && (done || k / seg < p);
+      g.fillStyle = ink(on ? (k / seg > p - 0.08 && !done ? 1 : 0.55) : 0.1);
+      g.fillRect(bx + k * (bw / seg), yy - 6, bw / seg - 1.2, 6);
+    }
+    txt(g, alive ? `${pad(Math.floor((done ? 1 : p) * 100), 2)}%` : "--", x + w, yy, 7, a, "right");
+  }
+}
+
+function fieldVal(kind, x, y, t, s) {
+  const X = x / FIELD_W, Y = y / FIELD_H;
+  let v;
+  if (kind === 0) v = Math.sin(X * 10 - t * 1.6 + Math.sin(Y * 7 + t * 0.8) * 1.3) * Math.cos(Y * 6 - X * 2);
+  else v = Math.sin(Math.hypot(X - 0.3 - 0.1 * Math.sin(t), Y - 0.5) * 18 - t * 2.2) * Math.exp(-Math.abs(Y - 0.5) * 2);
+  return v + s;
+}
+function drawCompare(g, t, x, y, w, h, r) {
+  const sc = Math.max(1, Math.floor(28 * stageP(3, t)));
+  const scenes = [((sc - 1) * 7) % 28 + 1, ((sc - 1) * 7 + 13) % 28 + 1];
+  const cols = ["REF", "OURS", "|Δ|×20"];
+  const fw = (w - 16) / 3, fh = (h - 30) / 2;
+  cols.forEach((c, j) => txt(g, c, x + 16 + j * fw, y + 6, 6.8, 0.55));
+  for (let row = 0; row < 2; row++) {
+    txt(g, `S${pad(scenes[row], 2)}`, x, y + 14 + row * (fh + 4) + fh / 2 + 2, 6.5, 0.5);
+    for (let j = 0; j < 3; j++) {
+      const c = fieldCanvases[row * 3 + j], fg = c.getContext("2d"), id = fg.createImageData(FIELD_W, FIELD_H);
+      for (let py = 0; py < FIELD_H; py++) for (let px = 0; px < FIELD_W; px++) {
+        const ref = fieldVal(row, px, py, t, 0);
+        const ours = fieldVal(row, px + 0.15, py, t, 0.015 * Math.sin(px * 0.7 + t));
+        let v = j === 0 ? ref : j === 1 ? ours : Math.abs(ours - ref) * 20 - 0.6;
+        v = clamp(v * 0.5 + 0.5);
+        const q = Math.floor(14 + v * 210);
+        const o = (py * FIELD_W + px) * 4; id.data[o] = q; id.data[o + 1] = q + 2; id.data[o + 2] = q + 4; id.data[o + 3] = 255;
+      }
+      fg.putImageData(id, 0, 0);
+      const fx = x + 16 + j * fw, fy = y + 11 + row * (fh + 4);
+      g.imageSmoothingEnabled = true;
+      g.drawImage(c, fx, fy, fw - 4, fh);
+      g.strokeStyle = ink(0.25); g.lineWidth = 0.6; g.strokeRect(fx + 0.5, fy + 0.5, fw - 5, fh - 1);
+    }
+  }
+  const ssim = 0.97 + 0.02 * noise1(t * 1.5);
+  txt(g, `SSIM ${ssim.toFixed(3)}  PSNR ${(40 + 3 * noise1(t + 3)).toFixed(1)}dB`, x, y + h - 1, 7, 0.7);
+  txt(g, `scene ${pad(sc, 2)}/28`, r.x + r.w - 18, r.y + 12, 7, 0.45, "right");
+}
+
+const MATRIX = [];
+(function () {
+  const ord = [];
+  for (let s = 0; s < 28; s++) ord.push(s);
+  for (let s = 0; s < 28; s++) MATRIX.push({ m: (s * 5 + (s >> 2)) % 11, extra: [(s * 3 + 4) % 11, (s * 7 + 1) % 11].filter((v, i) => hash(s * 9 + i) < 0.35) });
+  REVIEW_SCENES = REVIEW_AT.map(p => Math.floor(p * 28));
+})();
+function drawMatrix(g, t, x, y, w, h, r) {
+  const vp = stageP(3, t) * 28;
+  const lw = 20, pitch = (w - lw) / 28, rowH = (h - 22) / 11;
+  const scan = Math.floor((t * 6) % 28);
+  for (let m = 0; m < 11; m++) txt(g, `M${pad(m + 1, 2)}`, x, y + 6 + m * rowH + rowH / 2, 6, 0.4);
+  for (let s = 0; s < 28; s++) {
+    const cx = x + lw + s * pitch;
+    if (vp <= 0 && s === scan) { g.fillStyle = ink(0.06); g.fillRect(cx - 1, y, pitch, 11 * rowH + 2); }
+    if (vp > s && vp < s + 1) { g.fillStyle = ink(0.12); g.fillRect(cx - 1, y, pitch, 11 * rowH + 2); }
+    for (let m = 0; m < 11; m++) {
+      const cy = y + 2 + m * rowH;
+      const M = MATRIX[s], primary = M.m === m, extra = M.extra.includes(m);
+      const checked = vp > s + 1;
+      const cs = Math.min(pitch, rowH) - 2;
+      if (checked && primary) {
+        if (REVIEW_SCENES.includes(s)) {
+          g.strokeStyle = ink(1); g.lineWidth = 0.9; g.strokeRect(cx + 0.5, cy + 0.5, cs - 1, cs - 1);
+          g.beginPath(); g.moveTo(cx + 1, cy + 1); g.lineTo(cx + cs - 1, cy + cs - 1); g.stroke();
+        } else { g.fillStyle = ink(0.92); g.fillRect(cx, cy, cs, cs); }
+      } else if (checked && extra) { g.fillStyle = ink(0.4); g.fillRect(cx + 1.5, cy + 1.5, cs - 3, cs - 3); }
+      else { g.fillStyle = ink(primary ? 0.28 : 0.12); g.fillRect(cx + cs / 2 - 0.5, cy + cs / 2 - 0.5, 1.2, 1.2); }
+    }
+  }
+  const checked = Math.min(28, Math.floor(vp));
+  const rev = REVIEW_SCENES.filter(s => s < checked).length;
+  g.fillStyle = ink(0.92); g.fillRect(x, y + h - 7, 6, 6);
+  txt(g, `MATCH ${pad(checked - rev, 2)}`, x + 10, y + h - 1, 7, 0.75);
+  g.strokeStyle = ink(1); g.strokeRect(x + 72.5, y + h - 6.5, 5, 5);
+  txt(g, `REVIEW ${rev}`, x + 82, y + h - 1, 7, 0.75);
+  txt(g, `${checked}/28`, x + w, y + h - 1, 7, 0.5, "right");
+  txt(g, "11×28", r.x + r.w - 18, r.y + 12, 7, 0.45, "right");
+}
+
+function drawResidual(g, t, x, y, w, h, r) {
+  const ph = h - 12;
+  // axes, log decades
+  for (let d = 0; d <= 10; d += 2) {
+    const yy = y + ph * d / 10;
+    g.fillStyle = ink(0.08); g.fillRect(x + 22, yy, w - 22, 1);
+    txt(g, `1e-${d}`, x, yy + 3, 6, 0.4);
+  }
+  const tolY = y + ph * 0.8;
+  g.setLineDash([3, 3]); g.strokeStyle = ink(0.4); g.beginPath(); g.moveTo(x + 22, tolY); g.lineTo(x + w, tolY); g.stroke(); g.setLineDash([]);
+  txt(g, "tol", x + w - 2, tolY - 2, 6, 0.5, "right");
+  const cyc = 4.0, run = Math.floor(t / cyc), u = (t % cyc) / cyc;
+  for (let c = 0; c < 5; c++) {
+    const rate = 0.75 + hash(run * 5 + c) * 0.5;
+    g.strokeStyle = ink(c === 0 ? 0.95 : 0.3 + c * 0.05); g.lineWidth = c === 0 ? 1 : 0.7;
+    g.beginPath();
+    const n = Math.floor(80 * u);
+    for (let k = 0; k <= n; k++) {
+      const xx = x + 22 + (w - 22) * k / 80;
+      const dec = Math.min(10, 10.5 * Math.pow(k / 80, 0.8) * rate) + (hash2(k, c + run * 7) - 0.5) * 0.35 + 0.3 * Math.sin(k * 0.4 + c);
+      const yy = y + ph * clamp(dec / 10);
+      k ? g.lineTo(xx, yy) : g.moveTo(xx, yy);
+    }
+    g.stroke();
+  }
+  const cxp = x + 22 + (w - 22) * u;
+  g.fillStyle = ink(0.4); g.fillRect(cxp, y, 1, ph);
+  const res = Math.pow(10, -Math.min(10, 10.5 * Math.pow(u, 0.8)));
+  txt(g, `iter ${fmtInt(u * 4000)}  L2 ${res.toExponential(1)}`, x, y + h - 1, 7, 0.7);
+  txt(g, `run ${pad(run + 1, 2)}`, r.x + r.w - 18, r.y + 12, 7, 0.45, "right");
+}
+
+function drawIO(g, t, x, y, w, h, r) {
+  const tokens = 4.81e6 * easeIO(t / 21) + t * 1200;
+  txt(g, "TOKENS", x, y + 7, 6.5, 0.45); txt(g, `${(tokens / 1e6).toFixed(2)}M`, x, y + 22, 14, 0.95, "left", 300);
+  txt(g, "PAGES/S", x + w * 0.5, y + 7, 6.5, 0.45); txt(g, (31 + 9 * noise1(t * 2)).toFixed(1), x + w * 0.5, y + 22, 14, 0.95, "left", 300);
+  // scrolling histogram
+  const bars = 46, bw = w / bars, by = y + 30, bh = h - 52;
+  const sh = t * 8, off = sh % 1;
+  for (let k = 0; k <= bars; k++) {
+    const idx = Math.floor(sh) + k;
+    const v = 0.2 + 0.8 * Math.pow(hash(idx * 1.37), 1.6) * (0.6 + 0.4 * noise1(idx * 0.1));
+    const xx = x + (k - off) * bw;
+    g.fillStyle = ink(k > bars - 3 ? 0.9 : 0.42);
+    g.fillRect(xx, by + bh * (1 - v), bw - 1.5, bh * v);
+  }
+  g.fillStyle = ink(0.2); g.fillRect(x, by + bh, w, 1);
+  const q = Math.floor(t * 2.5);
+  for (let k = 0; k < 2; k++) {
+    const p = PAPERS[(q + k) % 64];
+    txt(g, `${k ? " " : "›"} ${p.id}.pdf  ${p.pages}pp  ${(hash(q + k) * 3 + 0.4).toFixed(1)}MB`, x, y + h - 10 + k * 10 - 0, 6.8, k ? 0.4 : 0.8);
+  }
+  txt(g, `${(120 + 40 * noise1(t)).toFixed(0)} MB/s`, r.x + r.w - 18, r.y + 12, 7, 0.45, "right");
+}
+
+// ---- overlays ----
+function drawOverlay(g, t, frame) {
+  // vignette
+  const vg = g.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.78);
+  vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.55)");
+  g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  // grain
+  g.save(); g.globalAlpha = 0.035; g.globalCompositeOperation = "overlay";
+  const gc = GRAIN[frame % GRAIN.length];
+  const ox = Math.floor(hash(frame) * 256), oy = Math.floor(hash(frame + 7) * 256);
+  for (let y = -oy; y < H; y += 256) for (let x = -ox; x < W; x += 256) g.drawImage(gc, x, y);
+  g.restore();
+  // fade in / out
+  const f = Math.min(ss(0, 0.6, t), 1 - ss(DUR - 0.6, DUR, t));
+  if (f < 1) { g.fillStyle = `rgba(0,0,0,${1 - f})`; g.fillRect(0, 0, W, H); }
+}
+
+function drawCornerMarks(g, t) {
+  g.save(); g.globalAlpha = ss(0.2, 1, t);
+  g.strokeStyle = ink(0.4); g.lineWidth = 1;
+  const m = 10, l = 10;
+  [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(([x, y, sx, sy]) => {
+    g.beginPath(); g.moveTo(x, y + sy * l); g.lineTo(x, y); g.lineTo(x + sx * l, y); g.stroke();
+  });
+  // center-area labels in free corners around the circle
+  txt(g, "VIEW 01 / CORPUS RING", 172, 290, 7.5, 0.5);
+  txt(g, `ω_ring = 0.045 rad/s · ${RING_BACK.meta.length + RING_FRONT.meta.length} sheets`, 172, 300, 7, 0.35);
+  txt(g, `SCAN θ ${(((t * 66) % 360)).toFixed(1)}°`, W - 172, 290, 7.5, 0.5, "right");
+  txt(g, "FOV 62.0° · f/2.8 · 1080×1350", W - 172, 300, 7, 0.35, "right");
+  txt(g, "FIELD · potential flow + Γ", 172, 990, 7.5, 0.5);
+  txt(g, `particles ${fmtInt(PARTS.length)} · streams ${STREAMS.length}`, 172, 1000, 7, 0.35);
+  txt(g, `${STAGES[stageAt(t)][0]} · stage ${stageAt(t) + 1}/5`, W - 172, 990, 7.5, 0.5, "right");
+  txt(g, "deterministic · seed 20261014", W - 172, 1000, 7, 0.35, "right");
+  g.restore();
+}
+
+// ---------- frame ----------
+function renderFrame(t) {
+  const frame = Math.round(t * FPS);
+  const cam = camera(t);
+  drawBackground(ctx, t);
+  drawCenter(cg, t, cam);
+  // soft vertical mask so the circle layer tucks under header and panels
+  cg.save(); cg.globalCompositeOperation = "destination-in";
+  const mg = cg.createLinearGradient(0, 0, 0, H);
+  mg.addColorStop(0, "rgba(0,0,0,0)"); mg.addColorStop(262 / H, "rgba(0,0,0,0)"); mg.addColorStop(300 / H, "rgba(0,0,0,1)");
+  mg.addColorStop(978 / H, "rgba(0,0,0,1)"); mg.addColorStop(1010 / H, "rgba(0,0,0,0)"); mg.addColorStop(1, "rgba(0,0,0,0)");
+  cg.fillStyle = mg; cg.fillRect(0, 0, W, H);
+  const hg = cg.createLinearGradient(0, 0, W, 0);
+  hg.addColorStop(0, "rgba(0,0,0,0)"); hg.addColorStop(150 / W, "rgba(0,0,0,0)"); hg.addColorStop(196 / W, "rgba(0,0,0,1)");
+  hg.addColorStop(884 / W, "rgba(0,0,0,1)"); hg.addColorStop(930 / W, "rgba(0,0,0,0)"); hg.addColorStop(1, "rgba(0,0,0,0)");
+  cg.fillStyle = hg; cg.fillRect(0, 0, W, H); cg.restore();
+  ctx.drawImage(centerLayer, 0, 0);
+  ctx.save(); applyCam(ctx, cam, 0.35); drawCornerMarks(ctx, t); drawSides(ctx, t); drawHeader(ctx, t); drawPanels(ctx, t); ctx.restore();
+  drawOverlay(ctx, t, frame);
+}
+
+async function init() {
+  await Promise.all([fnt(10, 300), fnt(10, 400), fnt(10, 600)].map(f => document.fonts.load(f, "AΔ")));
+  RING_BACK = makeRing(250, 236, 274, [22, 30], [30, 40], 0.13, 0.9, 1);
+  RING_FRONT = makeRing(190, 214, 240, [18, 25], [24, 33], 0.18, 1.0, 2);
+}
+window.renderFrame = renderFrame;
+window.ready = init();
+window.SCENE = { W, H, FPS, DUR };
+if (!/render/.test(location.search)) {
+  window.ready.then(() => {
+    const t0 = performance.now();
+    const loop = () => { renderFrame(((performance.now() - t0) / 1000) % DUR); requestAnimationFrame(loop); };
+    loop();
+  });
+}
+</script>
+</body>
+</html>
