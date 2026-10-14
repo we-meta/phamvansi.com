@@ -1,0 +1,1 @@
+Trước khi nói hai kết quả mâu thuẫn, cần so khớp năm trường. Đó là đối tượng, đối thủ, cách hiện thực, điều kiện và thước đo. Nếu khác ít nhất một trường, đó là khác điều kiện hoặc khác định nghĩa. Nếu khớp cả năm, đó mới là mâu thuẫn thực sự. Nếu thiếu thông tin, ghi là chưa đủ để phân giải. Số đông bài báo không phải là phép chứng minh.

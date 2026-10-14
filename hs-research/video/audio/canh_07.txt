@@ -1,0 +1,1 @@
+Phần chủ đề gồm mười sáu nhánh. Màu cho biết hướng chính của từng nhánh. Ví dụ, nhánh H S không sáu là kênh phụ. Nhánh H S mười ba xét thiết kế vật lý và đánh đổi giữa bảo mật với công suất, hiệu năng, diện tích. Mỗi nhánh có hồ sơ riêng gồm câu hỏi, phương pháp, chỉ số và bẫy thường gặp.

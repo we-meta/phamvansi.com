@@ -1,0 +1,1 @@
+Khả năng tái lập có năm bậc. Bậc một là truy cập được mã và dữ liệu. Bậc hai là chạy được. Bậc ba là tái tạo được kết quả trong môi trường đã chạy. Bậc bốn là kết quả vẫn giữ khi đổi điều kiện. Bậc năm là có nhóm khác lặp lại độc lập. Tải về thành công không có nghĩa là tái lập thành công.

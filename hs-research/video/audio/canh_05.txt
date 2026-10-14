@@ -1,0 +1,1 @@
+Nghiên cứu thông thường có sáu mức. Mức R một làm quen thuật ngữ. Mức R hai vẽ bản đồ các nhánh. Mức R ba so sánh phương án. Mức R bốn là tổng quan có hệ thống, có nhật ký tìm kiếm và loại trừ. Mức R năm kiểm tra lại một kết quả đã công bố. Mức R sáu tạo đóng góp mới có căn cứ.

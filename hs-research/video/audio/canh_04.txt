@@ -1,0 +1,1 @@
+Khung có chín lớp, từ mục đích ở lớp L không tới chuyển giao ở lớp L tám. Có ba vòng lặp. Kết quả tìm kiếm có thể buộc sửa câu hỏi. Mệnh đề mâu thuẫn có thể cần thực nghiệm nhỏ. Phản hồi của người dùng tạo câu hỏi mới. Một bản tổng quan có thể dừng hợp lệ sau lớp L năm.

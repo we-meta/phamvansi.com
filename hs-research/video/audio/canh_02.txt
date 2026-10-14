@@ -1,0 +1,1 @@
+Bản gốc đã có khung chín lớp, sáu mức nghiên cứu, mười sáu nhánh và quy trình mười hai bước. Bản mở rộng đi thêm ba hướng. Mỗi nhánh được tách sâu tới mức đặt được câu hỏi nghiên cứu. Mỗi bước có đầu ra và cổng chất lượng. Mọi kết luận phải truy được về nguồn hoặc dữ liệu.
