@@ -1,0 +1,27 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Tài liệu nhấn mạnh giới hạn của bằng chứng. Phát hiện rò rỉ chưa cho biết có khôi phục được khóa hay không. Kết quả trên [FPGA|mạch lập trình được] không tự động đại diện cho [ASIC|chíp chuyên dụng]. Chứng minh logic không bao phủ lỗi vật lý. Bản thân tài liệu không hướng dẫn tấn công, không chấm điểm sản phẩm, và danh sách nguồn chưa qua sàng lọc có hệ thống.",
+ "cau": [
+  [
+   0.15,
+   2.1
+  ],
+  [
+   2.4,
+   5.164
+  ],
+  [
+   5.464,
+   8.668
+  ],
+  [
+   8.968,
+   10.872
+  ],
+  [
+   11.172,
+   17.395
+  ]
+ ]
+}

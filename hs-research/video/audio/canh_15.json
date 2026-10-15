@@ -1,0 +1,23 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Với nền tảng thiết kế vật lý, tài liệu đề xuất bốn hướng khởi đầu. Đây mới là đề xuất, mức khả thi còn phụ thuộc công cụ và dữ liệu. Bước tiếp theo là một vòng kiểm chứng đầu tiên. Chọn một câu hỏi, đọc ba nguồn, điền một thẻ mệnh đề, rồi ghi trạng thái đúng phạm vi.",
+ "cau": [
+  [
+   0.15,
+   3.633
+  ],
+  [
+   3.933,
+   7.428
+  ],
+  [
+   7.728,
+   9.771
+  ],
+  [
+   10.071,
+   14.854
+  ]
+ ]
+}

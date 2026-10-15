@@ -1,0 +1,27 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Bản gốc đã có khung chín lớp, sáu mức nghiên cứu, mười sáu nhánh và quy trình mười hai bước. Bản mở rộng đi thêm ba hướng. Mỗi nhánh được tách sâu tới mức đặt được câu hỏi nghiên cứu. Mỗi bước có đầu ra và cổng chất lượng. Mọi kết luận phải truy được về nguồn hoặc dữ liệu.",
+ "cau": [
+  [
+   0.15,
+   5.061
+  ],
+  [
+   5.361,
+   6.801
+  ],
+  [
+   7.101,
+   10.026
+  ],
+  [
+   10.326,
+   12.196
+  ],
+  [
+   12.496,
+   14.806
+  ]
+ ]
+}

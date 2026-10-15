@@ -1,0 +1,1 @@
+Một chủ đề được định vị bằng mười trục, như tài sản, thuộc tính, đối thủ, tầng và vòng đời. Nên chọn tổ hợp có ý nghĩa kỹ thuật, thay vì nhân mọi nhãn thành hàng nghìn câu hỏi. Một thiết kế có thể thuộc nhiều nhánh, nên mỗi bài báo có một nhãn chính và vài nhãn phụ.

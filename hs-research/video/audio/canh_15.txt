@@ -1,0 +1,1 @@
+Với nền tảng thiết kế vật lý, tài liệu đề xuất bốn hướng khởi đầu. Đây mới là đề xuất, mức khả thi còn phụ thuộc công cụ và dữ liệu. Bước tiếp theo là một vòng kiểm chứng đầu tiên. Chọn một câu hỏi, đọc ba nguồn, điền một thẻ mệnh đề, rồi ghi trạng thái đúng phạm vi.

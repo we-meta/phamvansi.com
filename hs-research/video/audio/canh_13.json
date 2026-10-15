@@ -1,0 +1,27 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Một khoảng trống cần có phạm vi, tập tài liệu và bằng chứng về điều còn thiếu. Tài liệu liệt kê tám loại. Ví dụ, khoảng trống về mô hình, về đo lường, về tích hợp, hay khoảng trống sau triển khai vật lý. Câu chưa thấy trong lần tìm kiếm này chỉ là trạng thái tìm kiếm. Nó chưa phải là kết luận rằng chưa ai nghiên cứu.",
+ "cau": [
+  [
+   0.15,
+   4.144
+  ],
+  [
+   4.444,
+   5.628
+  ],
+  [
+   5.928,
+   11.269
+  ],
+  [
+   11.569,
+   14.773
+  ],
+  [
+   15.073,
+   17.43
+  ]
+ ]
+}

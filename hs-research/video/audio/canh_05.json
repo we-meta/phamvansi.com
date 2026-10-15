@@ -1,0 +1,35 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Nghiên cứu thông thường có sáu mức. [R1|Mức thứ nhất] làm quen thuật ngữ. [R2|Mức thứ hai] vẽ bản đồ các nhánh. [R3|Mức thứ ba] so sánh phương án. [R4|Mức thứ tư] là tổng quan có hệ thống, có nhật ký tìm kiếm và loại trừ. [R5|Mức thứ năm] kiểm tra lại một kết quả đã công bố. [R6|Mức thứ sáu] tạo đóng góp mới có căn cứ.",
+ "cau": [
+  [
+   0.15,
+   1.752
+  ],
+  [
+   2.052,
+   3.596
+  ],
+  [
+   3.896,
+   5.626
+  ],
+  [
+   5.926,
+   7.354
+  ],
+  [
+   7.654,
+   11.694
+  ],
+  [
+   11.994,
+   14.409
+  ],
+  [
+   14.709,
+   17.043
+  ]
+ ]
+}

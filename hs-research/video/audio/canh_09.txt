@@ -1,0 +1,1 @@
+Quy trình chuyên sâu có mười hai bước. Đầu tiên là định khung câu hỏi và viết đề cương trước khi tìm rộng. Tiếp theo là tìm nhiều tuyến, sàng lọc và đọc nguồn gốc. Sau đó lập ma trận bằng chứng, đối chiếu mâu thuẫn và đánh giá khả năng tái lập. Cuối cùng là tổng hợp khoảng trống, chốt bản ghi nhớ và quyết định dừng.

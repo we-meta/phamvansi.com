@@ -1,0 +1,31 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Nghiên cứu chuyên sâu có bốn mức. [D1|Mức đê một] truy vết mệnh đề về nguồn gốc đã đọc toàn văn. [D2|Mức đê hai] thêm đối chiếu bằng chứng thuận và nghịch. [D3|Mức đê ba] chạy lại mã và dữ liệu của một kết quả then chốt. [D4|Mức đê bốn] thiết kế phép thử mới. Ví dụ, tổng quan có hệ thống ở [R4|mức thứ tư] thường đi với [D2|mức đê hai].",
+ "cau": [
+  [
+   0.15,
+   1.543
+  ],
+  [
+   1.843,
+   4.815
+  ],
+  [
+   5.115,
+   7.553
+  ],
+  [
+   7.853,
+   10.942
+  ],
+  [
+   11.242,
+   12.879
+  ],
+  [
+   13.179,
+   16.929
+  ]
+ ]
+}

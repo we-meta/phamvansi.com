@@ -1,0 +1,1 @@
+Tài liệu dùng một thang trạng thái thống nhất. Một mệnh đề đi từ ứng viên, sang đang kiểm tra, rồi được hỗ trợ, bị bác bỏ, hoặc chưa kết luận. Mỗi trạng thái có màu và nhãn chữ riêng. Nguồn tài liệu cũng có trạng thái, từ mới nhận diện tới đã trích xuất. Khoảng trống được tách thành hai loại. Chưa tìm thấy khác với đã có căn cứ là còn thiếu.

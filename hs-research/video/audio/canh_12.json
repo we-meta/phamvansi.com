@@ -1,0 +1,35 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Khả năng tái lập có năm bậc. Bậc một là truy cập được mã và dữ liệu. Bậc hai là chạy được. Bậc ba là tái tạo được kết quả trong môi trường đã chạy. Bậc bốn là kết quả vẫn giữ khi đổi điều kiện. Bậc năm là có nhóm khác lặp lại độc lập. Tải về thành công không có nghĩa là tái lập thành công.",
+ "cau": [
+  [
+   0.15,
+   1.45
+  ],
+  [
+   1.75,
+   3.863
+  ],
+  [
+   4.163,
+   5.127
+  ],
+  [
+   5.427,
+   7.923
+  ],
+  [
+   8.223,
+   10.464
+  ],
+  [
+   10.764,
+   12.9
+  ],
+  [
+   13.2,
+   15.685
+  ]
+ ]
+}

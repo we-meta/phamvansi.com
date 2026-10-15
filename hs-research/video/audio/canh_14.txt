@@ -1,0 +1,1 @@
+Tài liệu nhấn mạnh giới hạn của bằng chứng. Phát hiện rò rỉ chưa cho biết có khôi phục được khóa hay không. Kết quả trên mạch lập trình được không tự động đại diện cho chíp chuyên dụng. Chứng minh logic không bao phủ lỗi vật lý. Bản thân tài liệu không hướng dẫn tấn công, không chấm điểm sản phẩm, và danh sách nguồn chưa qua sàng lọc có hệ thống.

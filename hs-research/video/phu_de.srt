@@ -1,0 +1,426 @@
+1
+00:00:00,150 --> 00:00:03,701
+Video này giới thiệu tài liệu phân cấp
+toàn diện về nghiên cứu và nghiên cứu
+
+2
+00:00:03,751 --> 00:00:05,359
+chuyên sâu trong bảo mật phần cứng.
+
+3
+00:00:05,709 --> 00:00:09,317
+Nguồn được đối chiếu ngày mười bốn tháng
+mười năm hai nghìn không trăm hai mươi
+
+4
+00:00:09,367 --> 00:00:09,502
+sáu.
+
+5
+00:00:09,852 --> 00:00:11,846
+Xin lưu ý, đây là khung phương pháp đề
+xuất.
+
+6
+00:00:12,196 --> 00:00:15,245
+Video không trình bày kết quả của một đợt
+nghiên cứu cụ thể nào.
+
+7
+00:00:16,110 --> 00:00:20,215
+Bản gốc đã có khung chín lớp, sáu mức
+nghiên cứu, mười sáu nhánh và quy trình
+
+8
+00:00:20,265 --> 00:00:20,971
+mười hai bước.
+
+9
+00:00:21,321 --> 00:00:22,711
+Bản mở rộng đi thêm ba hướng.
+
+10
+00:00:23,061 --> 00:00:25,936
+Mỗi nhánh được tách sâu tới mức đặt được
+câu hỏi nghiên cứu.
+
+11
+00:00:26,286 --> 00:00:28,106
+Mỗi bước có đầu ra và cổng chất lượng.
+
+12
+00:00:28,456 --> 00:00:30,716
+Mọi kết luận phải truy được về nguồn hoặc
+dữ liệu.
+
+13
+00:00:31,574 --> 00:00:32,801
+Lĩnh vực chia thành ba hướng.
+
+14
+00:00:33,151 --> 00:00:37,139
+Thứ nhất là bảo mật của chính phần cứng,
+tức phần cứng bị đọc bí mật hay đổi hành
+
+15
+00:00:37,189 --> 00:00:37,687
+vi thế nào.
+
+16
+00:00:38,037 --> 00:00:42,143
+Thứ hai là phần cứng phục vụ bảo mật, như
+gốc tin cậy hay bộ tăng tốc mật mã.
+
+17
+00:00:42,493 --> 00:00:46,251
+Thứ ba xét bảo mật xuyên suốt phần cứng và
+phần mềm, khi các tầng được ghép lại.
+
+18
+00:00:47,116 --> 00:00:50,375
+Khung có chín lớp, từ mục đích ở L0 tới
+chuyển giao ở L8.
+
+19
+00:00:50,725 --> 00:00:51,395
+Có ba vòng lặp.
+
+20
+00:00:51,745 --> 00:00:53,993
+Kết quả tìm kiếm có thể buộc sửa câu hỏi.
+
+21
+00:00:54,343 --> 00:00:56,325
+Mệnh đề mâu thuẫn có thể cần thực nghiệm
+nhỏ.
+
+22
+00:00:56,675 --> 00:00:58,587
+Phản hồi của người dùng tạo câu hỏi mới.
+
+23
+00:00:58,937 --> 00:01:01,407
+Một bản tổng quan có thể dừng hợp lệ sau
+L5.
+
+24
+00:01:02,266 --> 00:01:03,818
+Nghiên cứu thông thường có sáu mức.
+
+25
+00:01:04,168 --> 00:01:05,662
+R1 làm quen thuật ngữ.
+
+26
+00:01:06,012 --> 00:01:07,692
+R2 vẽ bản đồ các nhánh.
+
+27
+00:01:08,042 --> 00:01:09,420
+R3 so sánh phương án.
+
+28
+00:01:09,770 --> 00:01:13,760
+R4 là tổng quan có hệ thống, có nhật ký
+tìm kiếm và loại trừ.
+
+29
+00:01:14,110 --> 00:01:16,475
+R5 kiểm tra lại một kết quả đã công bố.
+
+30
+00:01:16,825 --> 00:01:19,109
+R6 tạo đóng góp mới có căn cứ.
+
+31
+00:01:19,976 --> 00:01:21,319
+Nghiên cứu chuyên sâu có bốn mức.
+
+32
+00:01:21,669 --> 00:01:24,591
+D1 truy vết mệnh đề về nguồn gốc đã đọc
+toàn văn.
+
+33
+00:01:24,941 --> 00:01:27,329
+D2 thêm đối chiếu bằng chứng thuận và
+nghịch.
+
+34
+00:01:27,679 --> 00:01:30,718
+D3 chạy lại mã và dữ liệu của một kết quả
+then chốt.
+
+35
+00:01:31,068 --> 00:01:32,655
+D4 thiết kế phép thử mới.
+
+36
+00:01:33,005 --> 00:01:36,705
+Ví dụ, tổng quan có hệ thống ở R4 thường
+đi với D2.
+
+37
+00:01:37,582 --> 00:01:39,308
+Phần chủ đề gồm mười sáu nhánh.
+
+38
+00:01:39,658 --> 00:01:41,489
+Màu cho biết hướng chính của từng nhánh.
+
+39
+00:01:41,839 --> 00:01:44,030
+Ví dụ, HS-06 là kênh phụ.
+
+40
+00:01:44,380 --> 00:01:49,262
+HS-13 xét thiết kế vật lý và đánh đổi giữa
+bảo mật với công suất, hiệu năng, diện
+
+41
+00:01:49,312 --> 00:01:49,566
+tích.
+
+42
+00:01:49,916 --> 00:01:53,842
+Mỗi nhánh có hồ sơ riêng gồm câu hỏi,
+phương pháp, chỉ số và bẫy thường gặp.
+
+43
+00:01:54,718 --> 00:01:58,848
+Một chủ đề được định vị bằng mười trục,
+như tài sản, thuộc tính, đối thủ, tầng và
+
+44
+00:01:58,898 --> 00:01:59,312
+vòng đời.
+
+45
+00:01:59,662 --> 00:02:04,001
+Nên chọn tổ hợp có ý nghĩa kỹ thuật, thay
+vì nhân mọi nhãn thành hàng nghìn câu hỏi.
+
+46
+00:02:04,351 --> 00:02:08,401
+Một thiết kế có thể thuộc nhiều nhánh, nên
+mỗi bài báo có một nhãn chính và vài nhãn
+
+47
+00:02:08,451 --> 00:02:08,596
+phụ.
+
+48
+00:02:09,450 --> 00:02:11,060
+Quy trình chuyên sâu có mười hai bước.
+
+49
+00:02:11,410 --> 00:02:14,414
+Đầu tiên là định khung câu hỏi và viết đề
+cương trước khi tìm rộng.
+
+50
+00:02:14,764 --> 00:02:17,326
+Tiếp theo là tìm nhiều tuyến, sàng lọc và
+đọc nguồn gốc.
+
+51
+00:02:17,676 --> 00:02:21,713
+Sau đó lập ma trận bằng chứng, đối chiếu
+mâu thuẫn và đánh giá khả năng tái lập.
+
+52
+00:02:22,063 --> 00:02:25,472
+Cuối cùng là tổng hợp khoảng trống, chốt
+bản ghi nhớ và quyết định dừng.
+
+53
+00:02:26,350 --> 00:02:28,065
+Tài liệu dùng một thang trạng thái thống
+nhất.
+
+54
+00:02:28,415 --> 00:02:33,016
+Một mệnh đề đi từ ứng viên, sang đang kiểm
+tra, rồi được hỗ trợ, bị bác bỏ, hoặc chưa
+
+55
+00:02:33,066 --> 00:02:33,508
+kết luận.
+
+56
+00:02:33,858 --> 00:02:35,828
+Mỗi trạng thái có màu và nhãn chữ riêng.
+
+57
+00:02:36,178 --> 00:02:39,460
+Nguồn tài liệu cũng có trạng thái, từ mới
+nhận diện tới đã trích xuất.
+
+58
+00:02:39,810 --> 00:02:41,223
+Khoảng trống được tách thành hai loại.
+
+59
+00:02:41,573 --> 00:02:44,019
+Chưa tìm thấy khác với đã có căn cứ là còn
+thiếu.
+
+60
+00:02:44,896 --> 00:02:48,062
+Trước khi nói hai kết quả mâu thuẫn, cần
+so khớp năm trường.
+
+61
+00:02:48,412 --> 00:02:51,740
+Đó là đối tượng, đối thủ, cách hiện thực,
+điều kiện và thước đo.
+
+62
+00:02:52,090 --> 00:02:55,558
+Nếu khác ít nhất một trường, đó là khác
+điều kiện hoặc khác định nghĩa.
+
+63
+00:02:55,908 --> 00:02:58,273
+Nếu khớp cả năm, đó mới là mâu thuẫn thực
+sự.
+
+64
+00:02:58,623 --> 00:03:01,058
+Nếu thiếu thông tin, ghi là chưa đủ để
+phân giải.
+
+65
+00:03:01,408 --> 00:03:03,331
+Số đông bài báo không phải là phép chứng
+minh.
+
+66
+00:03:04,200 --> 00:03:05,450
+Khả năng tái lập có năm bậc.
+
+67
+00:03:05,800 --> 00:03:07,863
+Bậc một là truy cập được mã và dữ liệu.
+
+68
+00:03:08,213 --> 00:03:09,127
+Bậc hai là chạy được.
+
+69
+00:03:09,477 --> 00:03:11,923
+Bậc ba là tái tạo được kết quả trong môi
+trường đã chạy.
+
+70
+00:03:12,273 --> 00:03:14,464
+Bậc bốn là kết quả vẫn giữ khi đổi điều
+kiện.
+
+71
+00:03:14,814 --> 00:03:16,900
+Bậc năm là có nhóm khác lặp lại độc lập.
+
+72
+00:03:17,250 --> 00:03:19,685
+Tải về thành công không có nghĩa là tái
+lập thành công.
+
+73
+00:03:20,552 --> 00:03:24,496
+Một khoảng trống cần có phạm vi, tập tài
+liệu và bằng chứng về điều còn thiếu.
+
+74
+00:03:24,846 --> 00:03:25,980
+Tài liệu liệt kê tám loại.
+
+75
+00:03:26,330 --> 00:03:30,620
+Ví dụ, khoảng trống về mô hình, về đo
+lường, về tích hợp, hay khoảng trống sau
+
+76
+00:03:30,670 --> 00:03:31,621
+triển khai vật lý.
+
+77
+00:03:31,971 --> 00:03:35,125
+Câu chưa thấy trong lần tìm kiếm này chỉ
+là trạng thái tìm kiếm.
+
+78
+00:03:35,475 --> 00:03:37,782
+Nó chưa phải là kết luận rằng chưa ai
+nghiên cứu.
+
+79
+00:03:38,654 --> 00:03:40,554
+Tài liệu nhấn mạnh giới hạn của bằng
+chứng.
+
+80
+00:03:40,904 --> 00:03:43,618
+Phát hiện rò rỉ chưa cho biết có khôi phục
+được khóa hay không.
+
+81
+00:03:43,968 --> 00:03:47,122
+Kết quả trên FPGA không tự động đại diện
+cho ASIC.
+
+82
+00:03:47,472 --> 00:03:49,326
+Chứng minh logic không bao phủ lỗi vật lý.
+
+83
+00:03:49,676 --> 00:03:53,687
+Bản thân tài liệu không hướng dẫn tấn
+công, không chấm điểm sản phẩm, và danh
+
+84
+00:03:53,737 --> 00:03:55,849
+sách nguồn chưa qua sàng lọc có hệ thống.
+
+85
+00:03:56,704 --> 00:04:00,137
+Với nền tảng thiết kế vật lý, tài liệu đề
+xuất bốn hướng khởi đầu.
+
+86
+00:04:00,487 --> 00:04:03,932
+Đây mới là đề xuất, mức khả thi còn phụ
+thuộc công cụ và dữ liệu.
+
+87
+00:04:04,282 --> 00:04:06,275
+Bước tiếp theo là một vòng kiểm chứng đầu
+tiên.
+
+88
+00:04:06,625 --> 00:04:11,189
+Chọn một câu hỏi, đọc ba nguồn, điền một
+thẻ mệnh đề, rồi ghi trạng thái đúng phạm
+
+89
+00:04:11,239 --> 00:04:11,358
+vi.
+
+90
+00:04:12,220 --> 00:04:16,937
+Tài liệu dẫn mười sáu nguồn gốc, gồm các
+chuẩn của NIST, đặc tả TPM, danh mục điểm
+
+91
+00:04:16,987 --> 00:04:20,715
+yếu phần cứng, và lời mời viết bài của hai
+hội nghị chuyên ngành.
+
+92
+00:04:21,065 --> 00:04:23,987
+Đây là đầu mối, cần kiểm tra phiên bản
+trực tiếp trên nguồn.
+
+93
+00:04:24,337 --> 00:04:25,564
+Cảm ơn bạn đã theo dõi.
