@@ -1,0 +1,31 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Khung có chín lớp, từ mục đích ở [L0|lớp không] tới chuyển giao ở [L8|lớp tám]. Có ba vòng lặp. Kết quả tìm kiếm có thể buộc sửa câu hỏi. Mệnh đề mâu thuẫn có thể cần thực nghiệm nhỏ. Phản hồi của người dùng tạo câu hỏi mới. Một bản tổng quan có thể dừng hợp lệ sau [L5|lớp năm].",
+ "cau": [
+  [
+   0.15,
+   3.459
+  ],
+  [
+   3.759,
+   4.479
+  ],
+  [
+   4.779,
+   7.077
+  ],
+  [
+   7.377,
+   9.409
+  ],
+  [
+   9.709,
+   11.671
+  ],
+  [
+   11.971,
+   14.491
+  ]
+ ]
+}

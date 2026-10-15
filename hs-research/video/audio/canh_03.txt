@@ -1,1 +1,1 @@
-Lĩnh vực chia thành ba hướng. Thứ nhất là bảo mật của chính phần cứng, tức phần cứng bị đọc bí mật hay đổi hành vi thế nào. Thứ hai là phần cứng phục vụ bảo mật, như gốc tin cậy hay tê pê em. Thứ ba xét bảo mật xuyên suốt phần cứng và phần mềm, khi các tầng được ghép lại.
+Lĩnh vực chia thành ba hướng. Thứ nhất là bảo mật của chính phần cứng, tức phần cứng bị đọc bí mật hay đổi hành vi thế nào. Thứ hai là phần cứng phục vụ bảo mật, như gốc tin cậy hay bộ tăng tốc mật mã. Thứ ba xét bảo mật xuyên suốt phần cứng và phần mềm, khi các tầng được ghép lại.

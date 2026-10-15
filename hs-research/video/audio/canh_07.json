@@ -1,0 +1,27 @@
+{
+ "giong": "vi_VN-vais1000-medium",
+ "toc_do": 0.9,
+ "loi_doc": "Phần chủ đề gồm mười sáu nhánh. Màu cho biết hướng chính của từng nhánh. Ví dụ, [HS-06|nhánh hát ét không sáu] là kênh phụ. [HS-13|Nhánh hát ét mười ba] xét thiết kế vật lý và đánh đổi giữa bảo mật với công suất, hiệu năng, diện tích. Mỗi nhánh có hồ sơ riêng gồm câu hỏi, phương pháp, chỉ số và bẫy thường gặp.",
+ "cau": [
+  [
+   0.15,
+   1.926
+  ],
+  [
+   2.226,
+   4.107
+  ],
+  [
+   4.407,
+   6.648
+  ],
+  [
+   6.948,
+   12.184
+  ],
+  [
+   12.484,
+   16.46
+  ]
+ ]
+}

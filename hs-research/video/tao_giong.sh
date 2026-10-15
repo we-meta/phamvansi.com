@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tạo giọng đọc cho từng cảnh từ audio/canh_XX.txt (do build.py sinh ra), rồi dựng lại video.
+# Phương án thay thế: tạo giọng bằng edge-tts (cần mạng tới speech.platform.bing.com). Mặc định dùng tao_giong.py (offline).
 # Cần mạng tới speech.platform.bing.com. Đổi giọng: GIONG=vi-VN-NamMinhNeural ./tao_giong.sh
 set -euo pipefail
 cd "$(dirname "$0")"

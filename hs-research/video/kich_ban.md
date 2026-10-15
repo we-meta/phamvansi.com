@@ -4,12 +4,12 @@ Nguồn: Hardware_Security_Phan_cap_toan_dien.docx (tài liệu khung, ngày đ�
 
 ## Giả định
 - Báo cáo kết quả (`07_synthesis/bao_cao_ket_qua.md`) chưa có, nên video giới thiệu **tài liệu khung**, không trình bày kết quả nghiên cứu. Mọi cảnh có nhãn "Khung đề xuất · không phải kết quả nghiên cứu".
-- Người dùng tự tạo giọng đọc sau. Khi chưa có audio, thời lượng mỗi cảnh = số âm tiết / 3.6 + 0.6 giây nghỉ, và video có track âm thanh im lặng.
+- Giọng đọc: Piper `vi_VN-vais1000-medium` (giọng nữ tổng hợp, CC BY 4.0) chạy offline qua sherpa-onnx, tạo bằng `tao_giong.py`. Cảnh nào thiếu audio thì dùng thời lượng ước tính (số âm tiết / 3.6) và âm thanh im lặng. Mỗi cảnh = thời lượng audio + 0.6 giây nghỉ.
 - Cấu trúc 16 cảnh được điều chỉnh từ mẫu `kieu=day-du` cho nội dung khung; mục tiêu 5 phút.
 
 ## Cảnh 1: Phân cấp toàn diện Research và Deep Research về Hardware Security
 
-- Kiểu hình: `tieu_de` · Nguồn: Trang bìa; mục 0 · Thời lượng: 18.4 s (ước tính)
+- Kiểu hình: `tieu_de` · Nguồn: Trang bìa; mục 0 · Thời lượng: 16.0 s (audio thật)
 - Chữ trên màn hình:
   - Giới thiệu khung tài liệu
   - Ngày đối chiếu nguồn: 14/10/2026
@@ -24,7 +24,7 @@ Video này giới thiệu tài liệu phân cấp toàn diện về nghiên cứ
 
 ## Cảnh 2: Tài liệu này là gì
 
-- Kiểu hình: `danh_sach` · Nguồn: Mục 0, 0.1 · Thời lượng: 17.3 s (ước tính)
+- Kiểu hình: `danh_sach` · Nguồn: Mục 0, 0.1 · Thời lượng: 15.5 s (audio thật)
 - Chữ trên màn hình:
   - Khung tổng hợp đề xuất, không phải taxonomy chính thức
   - Chiều sâu: mỗi nhánh tách xuống 3–4 cấp chủ đề
@@ -42,19 +42,19 @@ Bản gốc đã có khung chín lớp, sáu mức nghiên cứu, mười sáu n
 
 ## Cảnh 3: Ba hướng nghiên cứu
 
-- Kiểu hình: `ba_cot` · Nguồn: Mục 1.1 · S01 · Thời lượng: 18.1 s (ước tính)
+- Kiểu hình: `ba_cot` · Nguồn: Mục 1.1 · S01 · Thời lượng: 15.5 s (audio thật)
 
 **Lời đọc (phụ đề):**
 
-Lĩnh vực chia thành ba hướng. Thứ nhất là bảo mật của chính phần cứng, tức phần cứng bị đọc bí mật hay đổi hành vi thế nào. Thứ hai là phần cứng phục vụ bảo mật, như gốc tin cậy hay TPM. Thứ ba xét bảo mật xuyên suốt phần cứng và phần mềm, khi các tầng được ghép lại.
+Lĩnh vực chia thành ba hướng. Thứ nhất là bảo mật của chính phần cứng, tức phần cứng bị đọc bí mật hay đổi hành vi thế nào. Thứ hai là phần cứng phục vụ bảo mật, như gốc tin cậy hay bộ tăng tốc mật mã. Thứ ba xét bảo mật xuyên suốt phần cứng và phần mềm, khi các tầng được ghép lại.
 
 **Văn bản đưa vào TTS:**
 
-Lĩnh vực chia thành ba hướng. Thứ nhất là bảo mật của chính phần cứng, tức phần cứng bị đọc bí mật hay đổi hành vi thế nào. Thứ hai là phần cứng phục vụ bảo mật, như gốc tin cậy hay tê pê em. Thứ ba xét bảo mật xuyên suốt phần cứng và phần mềm, khi các tầng được ghép lại.
+Lĩnh vực chia thành ba hướng. Thứ nhất là bảo mật của chính phần cứng, tức phần cứng bị đọc bí mật hay đổi hành vi thế nào. Thứ hai là phần cứng phục vụ bảo mật, như gốc tin cậy hay bộ tăng tốc mật mã. Thứ ba xét bảo mật xuyên suốt phần cứng và phần mềm, khi các tầng được ghép lại.
 
 ## Cảnh 4: Chín lớp L0–L8
 
-- Kiểu hình: `chuoi_lop` · Nguồn: Mục 1.3, 1.4 · Thời lượng: 18.4 s (ước tính)
+- Kiểu hình: `chuoi_lop` · Nguồn: Mục 1.3, 1.4 · Thời lượng: 15.2 s (audio thật)
 - Chú thích thuật ngữ: literature research: khảo cứu tài liệu · claim: mệnh đề cần kiểm chứng
 
 **Lời đọc (phụ đề):**
@@ -63,11 +63,11 @@ Khung có chín lớp, từ mục đích ở L0 tới chuyển giao ở L8. Có 
 
 **Văn bản đưa vào TTS:**
 
-Khung có chín lớp, từ mục đích ở lớp L không tới chuyển giao ở lớp L tám. Có ba vòng lặp. Kết quả tìm kiếm có thể buộc sửa câu hỏi. Mệnh đề mâu thuẫn có thể cần thực nghiệm nhỏ. Phản hồi của người dùng tạo câu hỏi mới. Một bản tổng quan có thể dừng hợp lệ sau lớp L năm.
+Khung có chín lớp, từ mục đích ở lớp không tới chuyển giao ở lớp tám. Có ba vòng lặp. Kết quả tìm kiếm có thể buộc sửa câu hỏi. Mệnh đề mâu thuẫn có thể cần thực nghiệm nhỏ. Phản hồi của người dùng tạo câu hỏi mới. Một bản tổng quan có thể dừng hợp lệ sau lớp năm.
 
 ## Cảnh 5: Sáu mức research R1–R6
 
-- Kiểu hình: `bac_thang` · Nguồn: Mục 2.1 · Thời lượng: 19.5 s (ước tính)
+- Kiểu hình: `bac_thang` · Nguồn: Mục 2.1 · Thời lượng: 17.7 s (audio thật)
 - Chú thích thuật ngữ: threat model: mô hình mối đe dọa · search/exclusion log: nhật ký tìm kiếm/loại trừ
 
 **Lời đọc (phụ đề):**
@@ -76,24 +76,24 @@ Nghiên cứu thông thường có sáu mức. R1 làm quen thuật ngữ. R2 v�
 
 **Văn bản đưa vào TTS:**
 
-Nghiên cứu thông thường có sáu mức. Mức R một làm quen thuật ngữ. Mức R hai vẽ bản đồ các nhánh. Mức R ba so sánh phương án. Mức R bốn là tổng quan có hệ thống, có nhật ký tìm kiếm và loại trừ. Mức R năm kiểm tra lại một kết quả đã công bố. Mức R sáu tạo đóng góp mới có căn cứ.
+Nghiên cứu thông thường có sáu mức. Mức thứ nhất làm quen thuật ngữ. Mức thứ hai vẽ bản đồ các nhánh. Mức thứ ba so sánh phương án. Mức thứ tư là tổng quan có hệ thống, có nhật ký tìm kiếm và loại trừ. Mức thứ năm kiểm tra lại một kết quả đã công bố. Mức thứ sáu tạo đóng góp mới có căn cứ.
 
 ## Cảnh 6: Bốn mức deep research D1–D4
 
-- Kiểu hình: `bac_thang_ghep` · Nguồn: Mục 2.2.1, 2.3 · Thời lượng: 18.7 s (ước tính)
+- Kiểu hình: `bac_thang_ghep` · Nguồn: Mục 2.2.1, 2.3 · Thời lượng: 17.6 s (audio thật)
 - Chú thích thuật ngữ: artifact: mã, dữ liệu, cấu hình đi kèm công bố · locator: vị trí trích dẫn
 
 **Lời đọc (phụ đề):**
 
-Nghiên cứu chuyên sâu có bốn mức. D1 truy mệnh đề về nguồn gốc đã đọc toàn văn. D2 thêm đối chiếu bằng chứng thuận và nghịch. D3 chạy lại mã và dữ liệu của một kết quả then chốt. D4 thiết kế phép thử mới. Ví dụ, R4 thường đi với D2.
+Nghiên cứu chuyên sâu có bốn mức. D1 truy vết mệnh đề về nguồn gốc đã đọc toàn văn. D2 thêm đối chiếu bằng chứng thuận và nghịch. D3 chạy lại mã và dữ liệu của một kết quả then chốt. D4 thiết kế phép thử mới. Ví dụ, tổng quan có hệ thống ở R4 thường đi với D2.
 
 **Văn bản đưa vào TTS:**
 
-Nghiên cứu chuyên sâu có bốn mức. Mức D một truy mệnh đề về nguồn gốc đã đọc toàn văn. Mức D hai thêm đối chiếu bằng chứng thuận và nghịch. Mức D ba chạy lại mã và dữ liệu của một kết quả then chốt. Mức D bốn thiết kế phép thử mới. Ví dụ, mức R bốn thường đi với mức D hai.
+Nghiên cứu chuyên sâu có bốn mức. Mức đê một truy vết mệnh đề về nguồn gốc đã đọc toàn văn. Mức đê hai thêm đối chiếu bằng chứng thuận và nghịch. Mức đê ba chạy lại mã và dữ liệu của một kết quả then chốt. Mức đê bốn thiết kế phép thử mới. Ví dụ, tổng quan có hệ thống ở mức thứ tư thường đi với mức đê hai.
 
 ## Cảnh 7: Mười sáu nhánh chủ đề HS-01 … HS-16
 
-- Kiểu hình: `luoi_nhanh` · Nguồn: Mục 3.0 · Thời lượng: 18.7 s (ước tính)
+- Kiểu hình: `luoi_nhanh` · Nguồn: Mục 3.0 · Thời lượng: 17.1 s (audio thật)
 
 **Lời đọc (phụ đề):**
 
@@ -101,11 +101,11 @@ Phần chủ đề gồm mười sáu nhánh. Màu cho biết hướng chính c�
 
 **Văn bản đưa vào TTS:**
 
-Phần chủ đề gồm mười sáu nhánh. Màu cho biết hướng chính của từng nhánh. Ví dụ, nhánh H S không sáu là kênh phụ. Nhánh H S mười ba xét thiết kế vật lý và đánh đổi giữa bảo mật với công suất, hiệu năng, diện tích. Mỗi nhánh có hồ sơ riêng gồm câu hỏi, phương pháp, chỉ số và bẫy thường gặp.
+Phần chủ đề gồm mười sáu nhánh. Màu cho biết hướng chính của từng nhánh. Ví dụ, nhánh hát ét không sáu là kênh phụ. Nhánh hát ét mười ba xét thiết kế vật lý và đánh đổi giữa bảo mật với công suất, hiệu năng, diện tích. Mỗi nhánh có hồ sơ riêng gồm câu hỏi, phương pháp, chỉ số và bẫy thường gặp.
 
 ## Cảnh 8: Mười trục khảo sát A01–A10
 
-- Kiểu hình: `luoi_truc` · Nguồn: Mục 4.1, 1.5 · Thời lượng: 17.0 s (ước tính)
+- Kiểu hình: `luoi_truc` · Nguồn: Mục 4.1, 1.5 · Thời lượng: 14.7 s (audio thật)
 
 **Lời đọc (phụ đề):**
 
@@ -117,7 +117,7 @@ Một chủ đề được định vị bằng mười trục, như tài sản, 
 
 ## Cảnh 9: Quy trình deep research P01–P12
 
-- Kiểu hình: `dong_thoi_gian` · Nguồn: Mục 6.0 · Thời lượng: 19.5 s (ước tính)
+- Kiểu hình: `dong_thoi_gian` · Nguồn: Mục 6.0 · Thời lượng: 16.9 s (audio thật)
 - Chú thích thuật ngữ: protocol: đề cương · evidence matrix: ma trận bằng chứng · gap: khoảng trống
 
 **Lời đọc (phụ đề):**
@@ -130,7 +130,7 @@ Quy trình chuyên sâu có mười hai bước. Đầu tiên là định khung 
 
 ## Cảnh 10: Thang trạng thái thống nhất
 
-- Kiểu hình: `thang_trang_thai` · Nguồn: Mục 0.4 · Thời lượng: 21.2 s (ước tính)
+- Kiểu hình: `thang_trang_thai` · Nguồn: Mục 0.4 · Thời lượng: 18.5 s (audio thật)
 
 **Lời đọc (phụ đề):**
 
@@ -142,7 +142,7 @@ Tài liệu dùng một thang trạng thái thống nhất. Một mệnh đề �
 
 ## Cảnh 11: Đối chiếu mâu thuẫn (P07)
 
-- Kiểu hình: `hai_cot_doi_chieu` · Nguồn: Mục 6.7 · Thời lượng: 21.2 s (ước tính)
+- Kiểu hình: `hai_cot_doi_chieu` · Nguồn: Mục 6.7 · Thời lượng: 19.3 s (audio thật)
 
 **Lời đọc (phụ đề):**
 
@@ -154,7 +154,7 @@ Trước khi nói hai kết quả mâu thuẫn, cần so khớp năm trường. 
 
 ## Cảnh 12: Năm bậc reproducibility (P08)
 
-- Kiểu hình: `thang_bac` · Nguồn: Mục 6.8, 0.4 · Thời lượng: 19.5 s (ước tính)
+- Kiểu hình: `thang_bac` · Nguồn: Mục 6.8, 0.4 · Thời lượng: 16.4 s (audio thật)
 
 **Lời đọc (phụ đề):**
 
@@ -166,7 +166,7 @@ Khả năng tái lập có năm bậc. Bậc một là truy cập được mã v
 
 ## Cảnh 13: Tám loại khoảng trống (P10)
 
-- Kiểu hình: `bang_gap` · Nguồn: Mục 6.10 · Thời lượng: 19.8 s (ước tính)
+- Kiểu hình: `bang_gap` · Nguồn: Mục 6.10 · Thời lượng: 18.1 s (audio thật)
 
 **Lời đọc (phụ đề):**
 
@@ -178,7 +178,7 @@ Một khoảng trống cần có phạm vi, tập tài liệu và bằng chứng
 
 ## Cảnh 14: Giới hạn cần giữ
 
-- Kiểu hình: `danh_sach_gioi_han` · Nguồn: Mục 7.4, 0.5, 13 · Thời lượng: 20.9 s (ước tính)
+- Kiểu hình: `danh_sach_gioi_han` · Nguồn: Mục 7.4, 0.5, 13 · Thời lượng: 18.1 s (audio thật)
 - Chữ trên màn hình:
   - Leakage detected ≠ định lượng khả năng khôi phục key
   - FPGA measurement ≠ đại diện ASIC implementation
@@ -190,15 +190,15 @@ Một khoảng trống cần có phạm vi, tập tài liệu và bằng chứng
 
 **Lời đọc (phụ đề):**
 
-Tài liệu nhấn mạnh giới hạn của bằng chứng. Phát hiện rò rỉ chưa cho biết có khôi phục được khóa hay không. Kết quả trên FPGA không tự động đại diện cho chip ASIC. Chứng minh logic không bao phủ lỗi vật lý. Bản thân tài liệu không hướng dẫn tấn công, không chấm điểm sản phẩm, và danh sách nguồn chưa qua sàng lọc có hệ thống.
+Tài liệu nhấn mạnh giới hạn của bằng chứng. Phát hiện rò rỉ chưa cho biết có khôi phục được khóa hay không. Kết quả trên FPGA không tự động đại diện cho ASIC. Chứng minh logic không bao phủ lỗi vật lý. Bản thân tài liệu không hướng dẫn tấn công, không chấm điểm sản phẩm, và danh sách nguồn chưa qua sàng lọc có hệ thống.
 
 **Văn bản đưa vào TTS:**
 
-Tài liệu nhấn mạnh giới hạn của bằng chứng. Phát hiện rò rỉ chưa cho biết có khôi phục được khóa hay không. Kết quả trên ép pê giê a không tự động đại diện cho chip a xích. Chứng minh logic không bao phủ lỗi vật lý. Bản thân tài liệu không hướng dẫn tấn công, không chấm điểm sản phẩm, và danh sách nguồn chưa qua sàng lọc có hệ thống.
+Tài liệu nhấn mạnh giới hạn của bằng chứng. Phát hiện rò rỉ chưa cho biết có khôi phục được khóa hay không. Kết quả trên mạch lập trình được không tự động đại diện cho chíp chuyên dụng. Chứng minh logic không bao phủ lỗi vật lý. Bản thân tài liệu không hướng dẫn tấn công, không chấm điểm sản phẩm, và danh sách nguồn chưa qua sàng lọc có hệ thống.
 
 ## Cảnh 15: Bắt đầu từ đâu
 
-- Kiểu hình: `the_ket_luan` · Nguồn: Mục 12.1, 12.6 · Thời lượng: 17.3 s (ước tính)
+- Kiểu hình: `the_ket_luan` · Nguồn: Mục 12.1, 12.6 · Thời lượng: 15.5 s (audio thật)
 - Chú thích thuật ngữ: seed: hạt giống ngẫu nhiên của công cụ · PnR: đặt và đi dây · scan/debug: kiểm thử/gỡ lỗi
 
 **Lời đọc (phụ đề):**
@@ -211,14 +211,14 @@ Với nền tảng thiết kế vật lý, tài liệu đề xuất bốn hướ
 
 ## Cảnh 16: Nguồn tham chiếu gốc
 
-- Kiểu hình: `danh_sach_nguon` · Nguồn: Mục 13 · S01–S16 · Thời lượng: 15.0 s (ước tính)
+- Kiểu hình: `danh_sach_nguon` · Nguồn: Mục 13 · S01–S16 · Thời lượng: 14.2 s (audio thật)
 
 **Lời đọc (phụ đề):**
 
-Tài liệu dẫn mười sáu nguồn gốc, gồm các chuẩn của NIST, đặc tả TPM, danh mục điểm yếu phần cứng của MITRE, và hai hội nghị CHES và HOST. Đây là đầu mối, cần kiểm tra phiên bản trực tiếp trên nguồn. Cảm ơn bạn đã theo dõi.
+Tài liệu dẫn mười sáu nguồn gốc, gồm các chuẩn của NIST, đặc tả TPM, danh mục điểm yếu phần cứng, và lời mời viết bài của hai hội nghị chuyên ngành. Đây là đầu mối, cần kiểm tra phiên bản trực tiếp trên nguồn. Cảm ơn bạn đã theo dõi.
 
 **Văn bản đưa vào TTS:**
 
-Tài liệu dẫn mười sáu nguồn gốc, gồm các chuẩn của nít, đặc tả tê pê em, danh mục điểm yếu phần cứng của mai tơ, và hai hội nghị chét và hốt. Đây là đầu mối, cần kiểm tra phiên bản trực tiếp trên nguồn. Cảm ơn bạn đã theo dõi.
+Tài liệu dẫn mười sáu nguồn gốc, gồm các chuẩn của nít, đặc tả mô đun nền tảng tin cậy, danh mục điểm yếu phần cứng, và lời mời viết bài của hai hội nghị chuyên ngành. Đây là đầu mối, cần kiểm tra phiên bản trực tiếp trên nguồn. Cảm ơn bạn đã theo dõi.
 
-**Tổng thời lượng:** 300.2 s (5.00 phút)
+**Tổng thời lượng:** 266.3 s (4.44 phút)

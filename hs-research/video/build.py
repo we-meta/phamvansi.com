@@ -213,23 +213,23 @@ def estimate(text):
     return syl / SYL_PER_SEC
 
 
-def split_cues(text, maxlen=42):
-    """Chia lời đọc (dạng hiển thị) thành khung phụ đề <= 2 dòng x ~42 ký tự."""
-    sentences = re.split(r"(?<=[.?!])\s+", shown(text).strip())
-    cues = []
-    for s in sentences:
-        words, lines, cur = s.split(), [], ""
-        for w in words:
-            if cur and len(cur) + 1 + len(w) > maxlen:
-                lines.append(cur)
-                cur = w
-            else:
-                cur = f"{cur} {w}".strip()
-        if cur:
+def sentences(text):
+    """Tách câu trên văn bản còn cú pháp [hiển thị|đọc]; tao_giong.py dùng cùng cách tách."""
+    return re.split(r"(?<=[.?!])\s+", text.strip())
+
+
+def wrap_cues(sentence, maxlen=42):
+    """Chia một câu (dạng hiển thị) thành khung phụ đề <= 2 dòng x ~42 ký tự."""
+    words, lines, cur = sentence.split(), [], ""
+    for w in words:
+        if cur and len(cur) + 1 + len(w) > maxlen:
             lines.append(cur)
-        for i in range(0, len(lines), 2):
-            cues.append("\n".join(lines[i:i + 2]))
-    return cues
+            cur = w
+        else:
+            cur = f"{cur} {w}".strip()
+    if cur:
+        lines.append(cur)
+    return ["\n".join(lines[i:i + 2]) for i in range(0, len(lines), 2)]
 
 
 def ts(t):
@@ -237,19 +237,41 @@ def ts(t):
     return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
 
 
+def sentence_spans(c, speech):
+    """Mốc (bắt đầu, kết thúc) của từng câu trong cảnh.
+
+    Có audio/canh_XX.json (do tao_giong.py ghi) thì dùng mốc thật; nếu không thì chia
+    thời lượng nói theo số ký tự của từng câu."""
+    sents = sentences(c["loi_doc"])
+    meta = AUDIO / f"canh_{c['id']:02d}.json"
+    if meta.exists() and timing_ok(meta, c):
+        return [(s, a, e) for s, (a, e) in zip(sents, json.loads(meta.read_text())["cau"])]
+    weights = [len(shown(s)) for s in sents]
+    out, t = [], 0.0
+    for s, w in zip(sents, weights):
+        d = speech * w / sum(weights)
+        out.append((s, t, t + d))
+        t += d
+    return out
+
+
+def timing_ok(meta, c):
+    m = json.loads(meta.read_text())
+    return m.get("loi_doc") == c["loi_doc"] and len(m["cau"]) == len(sentences(c["loi_doc"]))
+
+
 def build_srt(scenes, timing):
     out, n, start = [], 1, 0.0
     for c in scenes:
-        speech = timing[c["id"]]["speech"]
-        cues = split_cues(c["loi_doc"])
-        weights = [len(x.replace("\n", " ")) for x in cues]
-        total = sum(weights)
-        t = start
-        for cue, wgt in zip(cues, weights):
-            d = speech * wgt / total
-            out.append(f"{n}\n{ts(t)} --> {ts(t + d - 0.05)}\n{cue}\n")
-            n += 1
-            t += d
+        for sent, a, e in sentence_spans(c, timing[c["id"]]["speech"]):
+            cues = wrap_cues(shown(sent))
+            weights = [len(x.replace("\n", " ")) for x in cues]
+            t = start + a
+            for cue, w in zip(cues, weights):
+                d = (e - a) * w / sum(weights)
+                out.append(f"{n}\n{ts(t)} --> {ts(t + d - 0.05)}\n{cue}\n")
+                n += 1
+                t += d
         start += timing[c["id"]]["dur"]
     return "\n".join(out)
 
@@ -283,8 +305,9 @@ def write_kich_ban(sb, timing):
          "## Giả định",
          "- Báo cáo kết quả (`07_synthesis/bao_cao_ket_qua.md`) chưa có, nên video giới thiệu **tài liệu khung**, "
          "không trình bày kết quả nghiên cứu. Mọi cảnh có nhãn \"Khung đề xuất · không phải kết quả nghiên cứu\".",
-         "- Người dùng tự tạo giọng đọc sau. Khi chưa có audio, thời lượng mỗi cảnh = số âm tiết / "
-         f"{SYL_PER_SEC} + {PAUSE} giây nghỉ, và video có track âm thanh im lặng.",
+         "- Giọng đọc: Piper `vi_VN-vais1000-medium` (giọng nữ tổng hợp, CC BY 4.0) chạy offline qua sherpa-onnx, "
+         "tạo bằng `tao_giong.py`. Cảnh nào thiếu audio thì dùng thời lượng ước tính (số âm tiết / "
+         f"{SYL_PER_SEC}) và âm thanh im lặng. Mỗi cảnh = thời lượng audio + {PAUSE} giây nghỉ.",
          "- Cấu trúc 16 cảnh được điều chỉnh từ mẫu `kieu=day-du` cho nội dung khung; mục tiêu 5 phút.", ""]
     total = 0
     for c in sb["canh"]:
